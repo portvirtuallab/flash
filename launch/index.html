@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Port Virtual Flash — Launch</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+  .stage { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:40px; padding:40px 16px; }
+  .wrap { display:flex; flex-direction:column; align-items:center; gap:18px; min-height:180px; justify-content:center;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; -webkit-tap-highlight-color:transparent; }
+
+  .btn {
+    position:relative; display:inline-flex; align-items:center; gap:12px;
+    padding:18px 44px; font-size:18px; font-weight:700; letter-spacing:.5px;
+    color:#fff; border:none; border-radius:50px; cursor:pointer;
+    background:linear-gradient(135deg,#0066ff,#00d4ff,#7b2ff7); background-size:200% 200%;
+    box-shadow:0 10px 30px rgba(0,102,255,.4); overflow:hidden;
+    animation:gradientMove 4s ease infinite, floaty 3s ease-in-out infinite;
+    transition:transform .25s ease, box-shadow .25s ease;
+    -webkit-touch-callout:none; user-select:none;
+  }
+  .btn:hover { transform:scale(1.08) translateY(-2px); box-shadow:0 16px 40px rgba(123,47,247,.5); }
+  .btn:active { transform:scale(.96); }
+  .btn:focus-visible { outline:3px solid #7b2ff7; outline-offset:4px; }
+  .btn .icon { font-size:22px; transition:transform .3s ease; }
+  .btn:hover .icon { transform:translateX(6px) rotate(8deg); }
+  .btn.clicked { animation:none; pointer-events:none; transform:scale(.97); }
+  .btn::before {
+    content:""; position:absolute; top:0; left:-120%; width:60%; height:100%;
+    background:linear-gradient(120deg,transparent,rgba(255,255,255,.55),transparent);
+    transform:skewX(-20deg); animation:shine 3.5s ease-in-out infinite;
+  }
+
+  .loader { display:none; flex-direction:column; align-items:center; gap:12px; width:300px; max-width:80vw; }
+  .loader.show { display:flex; animation:pop .4s ease; }
+  .loader .label { font-size:14px; font-weight:600; color:#444; letter-spacing:.4px; }
+  .bar { width:100%; height:14px; border-radius:20px; background:rgba(0,0,0,.08); overflow:hidden; }
+  .bar .fill { height:100%; width:0%; border-radius:20px; background:linear-gradient(90deg,#0066ff,#00d4ff,#7b2ff7);
+    background-size:200% 100%; animation:gradientMove 1.5s linear infinite; transition:width .15s linear; }
+  .pct { font-size:13px; font-weight:700; color:#0066ff; }
+
+  @keyframes gradientMove { 0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%} }
+  @keyframes floaty { 0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)} }
+  @keyframes shine { 0%{left:-120%}60%,100%{left:140%} }
+  @keyframes pop { from{opacity:0;transform:scale(.9)} to{opacity:1;transform:scale(1)} }
+
+  @media (max-width:480px){ .btn{ font-size:16px; padding:16px 32px; } }
+</style>
+</head>
+<body>
+  <main class="stage">
+    <h1 class="pvl-title">Intermodal Transport Mission</h1>
+    <div class="wrap">
+      <button class="btn" id="goBtn" onclick="launch()">
+        <span>LAUNCH</span>
+        <span class="icon" aria-hidden="true">🚀</span>
+      </button>
+
+      <div class="loader" id="loader" role="status" aria-live="polite">
+        <div class="label" id="label">Preparing your experience…</div>
+        <div class="bar"><div class="fill" id="fill"></div></div>
+        <div class="pct" id="pct">0%</div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="pvl-footer">
+    <a href="https://www.pvl.one" target="_blank" rel="noopener noreferrer">Port Virtual Lab</a> developed by
+    <a href="https://www.escolaeuropea.eu" target="_blank" rel="noopener noreferrer">Escola Europea - Intermodal Transport</a>.
+  </footer>
+
+<script>
+  var TARGET = '../mission/';
+
+  function launch(){
+    var btn = document.getElementById('goBtn');
+    var fill = document.getElementById('fill');
+    var pct = document.getElementById('pct');
+    btn.classList.add('clicked');
+    document.getElementById('loader').classList.add('show');
+
+    var p = 0;
+    var timer = setInterval(function(){
+      p += Math.random() * 12 + 4; // uneven, natural-feeling progress
+      if (p >= 100) { p = 100; clearInterval(timer); done(); }
+      fill.style.width = p + '%';
+      pct.textContent = Math.floor(p) + '%';
+    }, 180);
+
+    function done(){
+      document.getElementById('label').textContent = 'Ready! Opening…';
+      setTimeout(function(){ location.href = TARGET; }, 500);
+    }
+  }
+  window.addEventListener('pageshow', function (e) {
+    if (!e.persisted) return;
+    document.getElementById('goBtn').classList.remove('clicked');
+    document.getElementById('loader').classList.remove('show');
+    document.getElementById('fill').style.width = '0%';
+    document.getElementById('pct').textContent = '0%';
+    document.getElementById('label').textContent = 'Preparing your experience…';
+  });
+</script>
+</body>
+</html>

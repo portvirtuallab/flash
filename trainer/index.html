@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Port Virtual Flash Dashboard</title>
+  <meta name="robots" content="noindex" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+
+  <style>
+    :root {
+      --primary-color: #1E90FF;
+      --secondary-color: #104E8B;
+      --accent-color: #FF6F61;
+      --demo-color: #28a745;
+      --background-color: #FFFFFF;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --text-color: #333;
+      --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      --shadow-hover: 0 12px 35px rgba(0, 0, 0, 0.15);
+      --transition: all 0.3s ease;
+      --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+
+    /* Global Styles */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    .header {
+      background: var(--gradient);
+      color: #fff;
+      padding: 20px;
+      border-radius: 15px 15px 0 0;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .intro { text-align:center; margin:10px 0 30px; }
+    .intro h1 { display:inline-block; font-size:2rem; color:#333; text-transform:uppercase; font-weight:600; position:relative; overflow:hidden; padding-bottom:6px; }
+    .intro h1::after { content:""; position:absolute; left:0; bottom:0; width:100%; height:3px; background:linear-gradient(90deg,#4A90E2,#50c878); animation:underline 3s linear infinite; }
+    @keyframes underline { 0% { transform:translateX(-100%); } 100% { transform:translateX(100%); } }
+
+    .card:focus-visible { outline:3px solid var(--primary-color); outline-offset:3px; }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+
+    #dashboard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 25px;
+      padding: 30px 0;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      position: relative;
+      background: var(--card-bg);
+      padding: 30px 25px;
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      backdrop-filter: blur(10px);
+      text-align: center;
+      cursor: pointer;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      border: 2px solid transparent;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--primary-color);
+    }
+
+    .card i {
+      font-size: 2.5rem;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      transition: var(--transition);
+    }
+
+    .card:hover i {
+      color: var(--accent-color);
+      transform: scale(1.1);
+    }
+
+    .card h2 {
+      font-size: 1.4rem;
+      color: var(--secondary-color);
+      margin-bottom: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .card p {
+      font-size: 0.95rem;
+      color: #666;
+      line-height: 1.4;
+    }
+
+    /* Special styling for demo card */
+    .card.demo {
+      background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+      border: 2px solid #ff5252;
+      color: white;
+      box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+    }
+
+    .card.demo i {
+      color: white;
+    }
+
+    .card.demo h2 {
+      color: white;
+    }
+
+    .card.demo p {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .card.demo:hover {
+      background: linear-gradient(135deg, #ff5252, #ff7979);
+      transform: translateY(-8px) scale(1.05);
+      box-shadow: 0 15px 40px rgba(255, 107, 107, 0.6);
+      border-color: #ff1744;
+    }
+
+    .card.demo:hover i {
+      color: white;
+      transform: scale(1.2);
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 8% auto;
+      padding: 30px;
+      border: none;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 15px;
+      text-align: center;
+      animation: fadeIn 0.5s ease-in;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-content h3 {
+      color: var(--text-color);
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .modal-content p {
+      margin-bottom: 25px;
+      font-size: 1rem;
+      color: var(--text-color);
+      line-height: 1.5;
+    }
+
+    .modal-link {
+      display: inline-block;
+      padding: 12px 25px;
+      background: var(--gradient);
+      color: #fff;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: var(--transition);
+      margin: 5px;
+    }
+
+    .modal-link:hover {
+      background: var(--accent-color);
+      transform: scale(1.05);
+    }
+
+    .modal-link.demo-guide {
+      background: #ff6b6b;
+    }
+
+    .modal-link.demo-guide:hover {
+      background: #ff5252;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .close:hover,
+    .close:focus {
+      color: var(--accent-color);
+      transform: scale(1.1);
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 20px 0;
+      font-size: 0.9rem;
+      color: #666;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      margin-top: auto;
+    }
+
+    .footer a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .footer a:hover {
+      color: var(--accent-color);
+      text-decoration: underline;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      #dashboard {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 15px;
+      }
+      
+      .header h1 {
+        font-size: 2rem;
+      }
+      
+      #dashboard {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 20px 0;
+      }
+      
+      .card {
+        padding: 20px;
+      }
+      
+      .card h2 {
+        font-size: 1.2rem;
+      }
+      
+      .card i {
+        font-size: 2rem;
+      }
+      
+      .modal-content {
+        margin: 15% auto;
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+      
+      #dashboard {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="intro"><h1>Welcome to PVL FLASH</h1></div>
+    <div class="header">
+      <h1>Port Virtual Flash Dashboard</h1>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div id="dashboard">
+      <!-- Presentation Card -->
+      <div id="presentationCard" class="card" role="button" tabindex="0">
+        <i class="fas fa-file-powerpoint"></i>
+        <h2>Presentation</h2>
+        <p>View main project presentation</p>
+      </div>
+
+      <!-- Team Roulette Card -->
+      <a href="roulette/" class="card">
+        <i class="fas fa-random"></i>
+        <h2>Team Roulette</h2>
+        <p>Random team assignment, saved to the sheet and sent by e-mail</p>
+      </a>
+
+      <!-- Welcome Teams Card -->
+      <a href="../" class="card" target="_blank">
+        <i class="fas fa-handshake"></i>
+        <h2>Welcome Teams</h2>
+        <p>Student entry: welcome, launch and mission</p>
+      </a>
+
+      <!-- Activity Dashboard Card -->
+      <a href="scoreboard/" class="card">
+        <i class="fas fa-chart-line"></i>
+        <h2>Activity Dashboard</h2>
+        <p>Real-time activity monitoring: scores, tasks and time per team</p>
+      </a>
+
+      <!-- Demo Card -->
+      <div id="demoCard" class="card demo" role="button" tabindex="0" onclick="showDemo()">
+        <i class="fas fa-play"></i>
+        <h2>Demo</h2>
+        <p>Access demo guide and platform</p>
+      </div>
+
+      <!-- Final Activity (Kahoot) Card -->
+      <a href="https://kahoot.com/" class="card" target="_blank">
+        <i class="fas fa-gamepad"></i>
+        <h2>Final Activity</h2>
+        <p>Interactive Kahoot quiz</p>
+      </a>
+    </div>
+
+    <!-- Modal for Presentation Link -->
+    <div id="modal" class="modal">
+      <div class="modal-content">
+        <span id="modal-close" class="close">&times;</span>
+        <h3>Open Presentation</h3>
+        <p>Click the link below to view the presentation:</p>
+        <a href="https://docs.google.com/presentation/d/1xZJ_62FTTWycr8UK-srT86hDPQb9Yztz/present" target="_blank" class="modal-link">
+          <i class="fas fa-external-link-alt"></i> View Presentation
+        </a>
+      </div>
+    </div>
+
+    <!-- Demo Modal -->
+    <div id="demoModal" class="modal">
+      <div class="modal-content">
+        <span id="demoModalClose" class="close">&times;</span>
+        <h3>🚀 Demo Access</h3>
+        <p>Access the complete demo experience with guide and platform:</p>
+        <div style="margin: 20px 0;">
+          <a href="https://drive.google.com/file/d/1vbGvXeKuAYK9XZz5ldvtZNN_Io_DdbjT/view?usp=sharing" target="_blank" class="modal-link demo-guide">
+            <i class="fas fa-book"></i> Demo Guide
+          </a>
+          <a href="../demo/" target="_blank" class="modal-link">
+            <i class="fas fa-desktop"></i> Demo Platform
+          </a>
+        </div>
+        <p style="font-size: 0.9rem; color: #666;">
+          Start with the guide to understand the demo platform features.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    Powered by <a href="https://escolaeuropea.eu" target="_blank">Escola Europea Intermodal Transport</a>
+    <br>
+    <small style="opacity: 0.7;">Designed for excellence in port education</small>
+  </div>
+
+  <script>
+    // Modal functionality
+    const presentationCard = document.getElementById('presentationCard');
+    const modal = document.getElementById('modal');
+    const modalClose = document.getElementById('modal-close');
+    const demoModal = document.getElementById('demoModal');
+    const demoModalClose = document.getElementById('demoModalClose');
+
+    presentationCard.addEventListener('click', function(event) {
+      event.preventDefault();
+      modal.style.display = 'block';
+    });
+
+    modalClose.addEventListener('click', function() {
+      modal.style.display = 'none';
+    });
+
+    demoModalClose.addEventListener('click', function() {
+      demoModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', function(event) {
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+      if (event.target === demoModal) {
+        demoModal.style.display = 'none';
+      }
+    });
+
+    [presentationCard, document.getElementById('demoCard')].forEach(function (card) {
+      card.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); } });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { modal.style.display = 'none'; demoModal.style.display = 'none'; }
+    });
+
+    // Demo functionality
+    function showDemo() {
+      demoModal.style.display = 'block';
+    }
+
+    // Card entrance animation
+    window.addEventListener('load', function() {
+      const cards = document.querySelectorAll('.card');
+      cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+          card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, index * 100);
+      });
+    });
+  </script>
+</body>
+</html>

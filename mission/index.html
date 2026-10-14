@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PVL.ONE — Intermodal Transport Mission</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="../config.js"></script>
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --primary-dark: #1d4ed8;
+      --secondary-color: #64748b;
+      --background-color: #ffffff;
+      --surface-color: #f8fafc;
+      --surface-2: #eef2f8;
+      --border-color: #e2e8f0;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --error-color: #ef4444;
+      --xp-color: #8b5cf6;
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:var(--font-family); background:var(--background-color); color:var(--text-primary); line-height:1.6; min-height:100vh; font-size:14px; }
+    .container { width:100%; max-width:1400px; margin:0 auto; padding:24px; }
+
+    /* ---- Login ---- */
+    #loginContainer {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:48px 40px; background:var(--background-color); border:1px solid var(--border-color);
+      border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); margin:80px auto; max-width:420px;
+      animation:slideUp .4s ease-out; position:relative;
+    }
+    @keyframes slideUp { from{transform:translateY(20px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+    #loginContainer .brand { font-size:13px; font-weight:700; letter-spacing:2px; color:var(--primary-color); text-transform:uppercase; margin-bottom:8px; }
+    #loginContainer h1 { margin-bottom:8px; font-size:26px; font-weight:800; text-align:center; }
+    #loginContainer .subtitle { color:var(--text-secondary); text-align:center; margin-bottom:32px; }
+    #loginContainer input { padding:16px; font-size:16px; width:100%; margin-bottom:24px; border:2px solid var(--border-color); border-radius:var(--radius); text-align:center; font-family:var(--font-family); transition:var(--transition); background:var(--background-color); }
+    #loginContainer input:focus { border-color:var(--primary-color); outline:none; box-shadow:0 0 0 3px rgb(37 99 235 / .1); }
+    #loginContainer button { padding:16px 32px; font-size:16px; font-weight:600; background:var(--primary-color); color:#fff; border:none; border-radius:var(--radius); cursor:pointer; font-family:var(--font-family); transition:var(--transition); width:100%; }
+    #loginContainer button:hover { background:var(--primary-dark); transform:translateY(-1px); }
+    .error-message { color:var(--error-color); margin-bottom:16px; display:none; font-size:14px; text-align:center; }
+
+    /* ---- Dashboard ---- */
+    #dashboard { display:none; background:var(--background-color); border:1px solid var(--border-color); border-radius:var(--radius-lg); box-shadow:var(--shadow-md); overflow:hidden; }
+    #dashboard header { padding:24px 32px; border-bottom:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; background:var(--surface-color); flex-wrap:wrap; gap:16px; }
+    #countdownTimerContainer { font-size:16px; color:var(--error-color); font-weight:700; display:flex; align-items:center; gap:8px; }
+    #countdownTimerContainer::before { content:"⏰"; font-size:18px; }
+    #teamName { font-size:30px; font-weight:800; color:var(--primary-color); text-align:center; flex-grow:1; }
+    #headerInfo { font-size:14px; color:var(--text-secondary); text-align:right; display:flex; flex-direction:column; gap:4px; }
+    #headerInfo .level-badge { display:inline-flex; align-items:center; gap:6px; background:var(--xp-color); color:#fff; padding:3px 10px; border-radius:999px; font-weight:700; font-size:12px; }
+
+    /* ---- XP / Progress ---- */
+    #progressWrap { margin:24px 32px; }
+    #progressLabels { display:flex; justify-content:space-between; font-size:12px; color:var(--text-secondary); margin-bottom:6px; font-weight:600; }
+    #progressContainer { background:var(--border-color); border-radius:6px; overflow:hidden; height:10px; }
+    #progressBar { width:0%; height:100%; background:linear-gradient(90deg,var(--xp-color),var(--primary-color)); transition:width .5s ease; }
+
+    /* ---- Badges strip ---- */
+    #badgeStrip { display:flex; gap:10px; flex-wrap:wrap; margin:0 32px 8px; }
+    .badge { display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:700; background:var(--surface-2); color:var(--secondary-color); border:1px solid var(--border-color); transition:var(--transition); opacity:.55; }
+    .badge.earned { background:linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; border-color:#fcd34d; opacity:1; transform:scale(1.02); }
+
+    .card { background:var(--background-color); border:1px solid var(--border-color); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); transition:var(--transition); }
+    .card:hover { box-shadow:var(--shadow-md); }
+
+    #caseStudyPreviewCard { margin:16px 32px 24px; padding:32px; cursor:pointer; }
+    #caseStudyPreviewCard:hover { transform:translateY(-2px); box-shadow:var(--shadow-lg); }
+    #caseStudyPreviewCard h2 { font-size:24px; font-weight:800; color:var(--primary-color); margin-bottom:16px; }
+    #caseStudyPreviewCard p { color:var(--text-secondary); line-height:1.7; margin-bottom:24px; }
+    #caseStudyPreviewCard button { padding:12px 24px; background:var(--primary-color); color:#fff; border:none; border-radius:var(--radius); font-weight:500; cursor:pointer; transition:var(--transition); }
+    #caseStudyPreviewCard button:hover { background:var(--primary-dark); }
+
+    /* ---- Timeline of the session ---- */
+    #sessionPlan { margin:0 32px 8px; display:flex; gap:0; align-items:stretch; flex-wrap:wrap; }
+    .plan-step { flex:1; min-width:120px; background:var(--surface-color); border:1px solid var(--border-color); padding:14px 16px; position:relative; }
+    .plan-step:first-child { border-radius:var(--radius) 0 0 var(--radius); }
+    .plan-step:last-child { border-radius:0 var(--radius) var(--radius) 0; }
+    .plan-step .t { font-weight:800; color:var(--primary-color); font-size:16px; }
+    .plan-step .l { font-size:12px; color:var(--text-secondary); }
+
+    #startMissionButton { margin:8px 32px 32px; display:block; padding:20px 40px; font-size:18px; font-weight:700; background:var(--primary-color); color:#fff; border:none; border-radius:var(--radius); cursor:pointer; transition:var(--transition); width:calc(100% - 64px); }
+    #startMissionButton:hover { background:var(--primary-dark); transform:translateY(-2px); }
+
+    .mission-grid { display:none; grid-template-columns:1fr 380px; gap:32px; padding:32px; }
+    @media (max-width:1024px){ .mission-grid{grid-template-columns:1fr;} .right-column{order:-1;} }
+
+    .task-card { margin-bottom:24px; padding:24px; }
+    .task-card label { display:block; margin:16px 0 8px; font-weight:600; color:var(--text-primary); }
+    .task-card .options { margin-left:16px; margin-bottom:16px; display:flex; flex-direction:column; gap:8px; }
+    .task-card .options label { margin:0; font-weight:400; display:flex; align-items:center; gap:8px; cursor:pointer; }
+    .task-card input[type="radio"], .task-card input[type="checkbox"] { margin:0; width:auto; }
+    .task-card input.task-answer { width:100%; padding:12px 16px; font-size:14px; margin-bottom:16px; border:2px solid var(--border-color); border-radius:var(--radius); transition:var(--transition); font-family:var(--font-family); }
+    .task-card input.task-answer:focus { border-color:var(--primary-color); outline:none; box-shadow:0 0 0 3px rgb(37 99 235 / .1); }
+    .task-card button { padding:12px 24px; background:var(--primary-color); color:#fff; border:none; border-radius:var(--radius); cursor:pointer; font-weight:500; margin-right:12px; font-size:14px; font-family:var(--font-family); transition:var(--transition); }
+    .task-card button:hover { background:var(--primary-dark); }
+    .task-card button:disabled { background:var(--secondary-color); cursor:not-allowed; opacity:.5; }
+    .hint-button { background:var(--warning-color) !important; }
+    .hint-button:hover { background:#d97706 !important; }
+    .task-card .error-text { color:var(--error-color); font-size:12px; margin-top:-12px; margin-bottom:12px; display:none; }
+    .task-card.submitted { border-left:4px solid var(--success-color); }
+    .points-tag { float:right; font-size:12px; font-weight:700; color:var(--xp-color); background:var(--surface-2); padding:2px 10px; border-radius:999px; }
+
+    .feedback-summary { margin-top:20px; padding:16px; background:var(--surface-color); border-radius:var(--radius); border:1px solid var(--border-color); }
+    .feedback-summary strong { display:block; margin-bottom:8px; font-size:14px; color:var(--text-primary); }
+    .feedback-item-correct { color:var(--success-color); font-size:13px; margin:4px 0; font-weight:500; }
+    .feedback-item-wrong { color:var(--error-color); font-size:13px; margin:4px 0; font-weight:500; }
+
+    details summary { font-size:18px; font-weight:700; color:var(--primary-color); padding:16px 20px; cursor:pointer; background:var(--surface-color); border-radius:var(--radius); margin-bottom:16px; border:1px solid var(--border-color); transition:var(--transition); list-style:none; }
+    details summary::-webkit-details-marker { display:none; }
+    details[open] summary { background:var(--primary-color); color:#fff; }
+    details summary:hover { background:var(--primary-color); color:#fff; }
+
+    .resources-card { padding:24px; margin-bottom:24px; }
+    .resources-card h2 { text-align:center; margin-bottom:8px; font-size:20px; font-weight:800; color:var(--primary-color); }
+    .resources-card .hint { text-align:center; font-size:12px; color:var(--text-secondary); margin-bottom:20px; }
+    .resources-grid { display:flex; flex-direction:column; gap:12px; }
+    .resource-item { background:var(--surface-color); padding:16px; border-radius:var(--radius); border:1px solid var(--border-color); display:flex; align-items:center; gap:16px; transition:var(--transition); cursor:pointer; }
+    .resource-item:hover { transform:translateY(-1px); background:var(--primary-color); color:#fff; border-color:var(--primary-color); }
+    .resource-item:hover .resource-icon { background:#fff !important; color:var(--primary-color) !important; }
+    .resource-icon { width:48px; height:48px; display:flex; align-items:center; justify-content:center; font-size:20px; color:#fff; border-radius:var(--radius); transition:var(--transition); }
+
+    #teamCredentialsBox { padding:24px; margin-bottom:24px; }
+    #teamCredentialsBox h2 { font-size:20px; font-weight:800; margin-bottom:20px; color:var(--primary-color); text-align:center; }
+    .credential-section { margin-bottom:20px; padding:16px; background:var(--surface-color); border-radius:var(--radius); border:1px solid var(--border-color); }
+    .credential-section h3 { font-size:16px; font-weight:600; color:var(--text-primary); margin-bottom:12px; }
+    .credential-details p { margin:6px 0; font-size:14px; line-height:1.5; color:var(--text-secondary); }
+    .credential-details strong { color:var(--text-primary); }
+    .credential-details a { color:var(--primary-color); text-decoration:none; }
+    .credential-details a:hover { text-decoration:underline; }
+    #downloadCredentialsBtn { display:block; margin:20px auto 0; padding:12px 24px; background:var(--primary-color); color:#fff; border:none; border-radius:var(--radius); cursor:pointer; transition:var(--transition); font-weight:500; font-family:var(--font-family); }
+    #downloadCredentialsBtn:hover { background:var(--primary-dark); }
+
+    #generalInfo { margin-top:24px; padding:20px; background:var(--surface-color); border:1px solid var(--border-color); border-radius:var(--radius); font-size:14px; color:var(--text-secondary); line-height:1.6; }
+
+    #finishActivityButton { margin:32px auto; display:block; padding:16px 32px; font-size:16px; font-weight:700; background:var(--success-color); color:#fff; border:none; border-radius:var(--radius); cursor:pointer; transition:var(--transition); font-family:var(--font-family); }
+    #finishActivityButton:hover { background:#059669; transform:translateY(-1px); }
+
+    .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; overflow:auto; background:rgba(0,0,0,.5); backdrop-filter:blur(4px); justify-content:center; align-items:center; }
+    .modal-content { background:var(--background-color); margin:auto; padding:32px; border-radius:var(--radius-lg); width:90%; max-width:600px; max-height:80vh; overflow-y:auto; position:relative; animation:modalSlideIn .3s ease-out; border:1px solid var(--border-color); box-shadow:var(--shadow-lg); }
+    @keyframes modalSlideIn { from{opacity:0;transform:scale(.95) translateY(-20px);} to{opacity:1;transform:scale(1) translateY(0);} }
+    .close-modal { position:absolute; top:16px; right:20px; font-size:24px; cursor:pointer; color:var(--text-secondary); transition:var(--transition); width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%; }
+    .close-modal:hover { color:var(--text-primary); background:var(--surface-color); }
+    .modal-content h2 { color:var(--primary-color); margin-bottom:24px; font-weight:800; }
+    .modal-content button { margin-top:24px; padding:12px 24px; background:var(--primary-color); color:#fff; border:none; border-radius:var(--radius); font-weight:500; cursor:pointer; transition:var(--transition); font-family:var(--font-family); }
+    .modal-content button:hover { background:var(--primary-dark); }
+
+    #extraQuizForm .quiz-question { margin-bottom:24px; padding:20px; background:var(--surface-color); border-radius:var(--radius); border:1px solid var(--border-color); }
+    #extraQuizForm label { font-weight:600; color:var(--text-primary); margin-bottom:12px; display:block; }
+    #extraQuizForm .options { margin-left:0; display:flex; flex-direction:column; gap:8px; }
+    #extraQuizForm .options label { font-weight:400; display:flex; align-items:flex-start; gap:8px; cursor:pointer; }
+
+    .notification { position:fixed; top:24px; right:24px; padding:16px 20px; border-radius:var(--radius); color:#fff; font-size:14px; font-weight:500; z-index:2000; display:none; animation:slideInRight .3s ease-out; box-shadow:var(--shadow-lg); border:1px solid rgba(255,255,255,.2); }
+    @keyframes slideInRight { from{transform:translateX(100%);opacity:0;} to{transform:translateX(0);opacity:1;} }
+    .notification.success{background:var(--success-color);} .notification.error{background:var(--error-color);} .notification.warning{background:var(--warning-color);} .notification.xp{background:var(--xp-color);}
+
+    #startWarningModal .modal-content { text-align:center; max-width:500px; }
+    #startWarningModal h2 { color:var(--warning-color); margin-bottom:16px; }
+    #startWarningModal p { color:var(--text-secondary); margin-bottom:24px; line-height:1.6; }
+
+    @media (max-width:768px){
+      .container{padding:16px;}
+      #dashboard header{flex-direction:column;gap:16px;text-align:center;}
+      #teamName{font-size:24px;}
+      .mission-grid{padding:16px;gap:24px;}
+      .modal-content{padding:24px;margin:16px;}
+    }
+    .loading{opacity:.6;pointer-events:none;}
+    @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;} }
+    button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--primary-color);outline-offset:2px;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Login -->
+    <div id="loginContainer">
+      <div class="brand">PVL.ONE · Escola Europea</div>
+      <h1>Intermodal Transport Mission</h1>
+      <div class="subtitle">Enter your team code to begin</div>
+      <div id="errorMessage" class="error-message">Invalid team code. Please try again.</div>
+      <input type="text" id="teamCode" placeholder="Team code (4 digits)" maxlength="4" inputmode="numeric" />
+      <button id="loginButton">Enter</button>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard">
+      <header>
+        <div id="countdownTimerContainer"><span id="countdownTimer">1:30:00</span></div>
+        <h1 id="teamName">Team</h1>
+        <div id="headerInfo">
+          <div><span class="level-badge"><i class="fas fa-shield-halved"></i> Level <span id="levelDisplay">1</span> · <span id="rankDisplay">Trainee</span></span></div>
+          <div>Time: <span id="timerDisplay">0:00</span></div>
+          <div>Score: <strong><span id="scoreDisplay">0</span></strong> pts</div>
+        </div>
+      </header>
+
+      <!-- XP bar -->
+      <div id="progressWrap">
+        <div id="progressLabels"><span id="xpLabel">XP 0 / 60</span><span id="taskCountLabel">0 / 4 tasks</span></div>
+        <div id="progressContainer"><div id="progressBar"></div></div>
+      </div>
+
+      <!-- Badges -->
+      <div id="badgeStrip">
+        <span class="badge" data-badge="first"><i class="fas fa-flag"></i> First submission</span>
+        <span class="badge" data-badge="streak"><i class="fas fa-fire"></i> Streak x3</span>
+        <span class="badge" data-badge="nohint"><i class="fas fa-brain"></i> No hints</span>
+        <span class="badge" data-badge="dap"><i class="fas fa-calculator"></i> DAP Master</span>
+        <span class="badge" data-badge="quiz"><i class="fas fa-star"></i> Perfect quiz</span>
+        <span class="badge" data-badge="finisher"><i class="fas fa-trophy"></i> Mission complete</span>
+      </div>
+
+      <!-- Session plan -->
+      <div id="sessionPlan">
+        <div class="plan-step"><div class="t">15 min</div><div class="l">Introduction</div></div>
+        <div class="plan-step"><div class="t">10 min</div><div class="l">Case reading</div></div>
+        <div class="plan-step"><div class="t">1:30 h</div><div class="l">Timed mission</div></div>
+      </div>
+
+      <!-- Case study preview -->
+      <div id="caseStudyPreviewCard" class="card" onclick="openCaseStudyModal()">
+        <h2>📋 Case Study Summary</h2>
+        <p>
+          <strong>Mission:</strong> prepare a transport report to ship the <strong>Tecnomaq LT-2000</strong> CNC milling machine from Egypt to Bari (Italy).<br><br>
+          <strong>Your tasks:</strong><br>
+          • Verify the key shipment data (Task 1)<br>
+          • Select the optimal transport unit (Task 2)<br>
+          • Analyse the maritime route — request quotations from PVL.ONE companies (Task 3)<br>
+          • Analyse the air route — request quotations from PVL.ONE companies (Task 4)<br>
+          • Ensure that the DAP cost does not exceed 20% of the machine value<br><br>
+          <strong>⚠️ Important:</strong> the timer starts when you click “Start Mission”. Each correct answer earns points. Use hints wisely (−3 points each).
+        </p>
+        <button onclick="event.stopPropagation(); downloadCaseStudyPDF()">📄 Download full case study</button>
+      </div>
+
+      <button id="startMissionButton">🚀 Start Mission</button>
+
+      <!-- Mission grid -->
+      <div class="mission-grid" id="missionGrid">
+        <div class="left-column">
+
+          <!-- TASK 1: Shipment data verification -->
+          <details open>
+            <summary>📊 Task 1: Shipment Data Verification</summary>
+            <div class="card task-card" id="task1" data-submitted="false">
+              <p><strong>Instructions:</strong> review the shipment documentation (commercial invoice and cargo data) in the <em>Reference Documents</em> section and verify the basic operation data. <span class="points-tag">8 pts</span></p>
+
+              <label>1.1 — What is the <strong>country of origin</strong> of the cargo?</label>
+              <div class="options">
+                <label><input type="radio" name="t1_q1" value="egypt"> 🇪🇬 Egypt</label>
+                <label><input type="radio" name="t1_q1" value="spain"> 🇪🇸 Spain</label>
+                <label><input type="radio" name="t1_q1" value="italy"> 🇮🇹 Italy</label>
+                <label><input type="radio" name="t1_q1" value="germany"> 🇩🇪 Germany</label>
+              </div>
+
+              <label>1.2 — What is the <strong>destination country</strong>?</label>
+              <div class="options">
+                <label><input type="radio" name="t1_q2" value="italy"> 🇮🇹 Italy</label>
+                <label><input type="radio" name="t1_q2" value="spain"> 🇪🇸 Spain</label>
+                <label><input type="radio" name="t1_q2" value="greece"> 🇬🇷 Greece</label>
+                <label><input type="radio" name="t1_q2" value="uk"> 🇬🇧 United Kingdom</label>
+              </div>
+
+              <label>1.3 — According to the machine data sheet, is the cargo classified as <strong>dangerous goods (IMDG/ADR)</strong>?</label>
+              <div class="options">
+                <label><input type="radio" name="t1_q3" value="yes"> ✅ Yes</label>
+                <label><input type="radio" name="t1_q3" value="no"> ❌ No</label>
+              </div>
+
+              <label>1.4 — Estimated inland distance from the <strong>warehouse in the country of origin to the warehouse in the destination country</strong>, in km (numbers only; decimal comma accepted):</label>
+              <input type="text" class="task-answer" data-task="task1" data-index="0" inputmode="decimal" placeholder="Example: 1320" />
+              <div class="error-text" data-error-for="task1-0">Enter a valid number (no units or symbols).</div>
+
+              <button onclick="submitTask('task1')">✅ Submit task</button>
+              <button class="hint-button" onclick="useHint('task1')">💡 Hint (−3)</button>
+            </div>
+          </details>
+
+          <!-- TASK 2: Transport unit selection -->
+          <details open>
+            <summary>📦 Task 2: Transport Unit Selection</summary>
+            <div class="card task-card" id="task2" data-submitted="false">
+              <p><strong>Instructions:</strong> using the dimensions and weight of the milling machine, determine the optimal transport unit and review the freight forwarder quotation. <span class="points-tag">4 pts</span></p>
+
+              <label>2.1 — What is the <strong>optimal transport unit</strong> for this machine (dry cargo, within standard dimensions)?</label>
+              <div class="options">
+                <label><input type="radio" name="q2_1" value="20"> 📦 20-foot container (20' DV)</label>
+                <label><input type="radio" name="q2_1" value="40"> 📦 40-foot container (40' DV)</label>
+                <label><input type="radio" name="q2_1" value="hc"> 📦 High Cube container (40' HC)</label>
+                <label><input type="radio" name="q2_1" value="ot"> 📦 Open Top</label>
+              </div>
+
+              <label>2.2 — When reviewing the <strong>PLAYFORWARDING Barcelona freight forwarder quotation</strong>, did you identify any discrepancy or inconsistent charge?</label>
+              <div class="options">
+                <label><input type="radio" name="q2_2" value="yes"> ✅ Yes, there are discrepancies</label>
+                <label><input type="radio" name="q2_2" value="no"> ❌ No, everything is consistent</label>
+              </div>
+
+              <button onclick="submitTask('task2')">✅ Submit task</button>
+              <button class="hint-button" onclick="useHint('task2')">💡 Hint (−3)</button>
+            </div>
+          </details>
+
+          <!-- TASK 3: Maritime route -->
+          <details open>
+            <summary>🚢 Task 3: Maritime Route Analysis</summary>
+            <div class="card task-card" id="task3" data-submitted="false">
+              <p><strong>Instructions:</strong> request quotations from the maritime companies in the PVL.ONE environment using your <strong>team PIN</strong> and complete the maritime route cost breakdown. Numbers only. Decimal commas are accepted. The example values are only format examples and are not valid answers. <span class="points-tag">18 pts</span></p>
+
+              <label>3.1 — <strong>Ocean freight</strong> port-to-port, including all surcharges (€):</label>
+              <input type="text" class="task-answer" data-task="task3" data-index="0" inputmode="decimal" placeholder="Example: 1680" />
+              <div class="error-text" data-error-for="task3-0">Enter a valid number.</div>
+
+              <label>3.2 — Combined <strong>inland transport</strong> (pre-carriage at origin + final delivery at destination) (€):</label>
+              <input type="text" class="task-answer" data-task="task3" data-index="1" inputmode="decimal" placeholder="Example: 1280" />
+              <div class="error-text" data-error-for="task3-1">Enter a valid number.</div>
+
+              <label>3.3 — Port-to-port <strong>transit time</strong>, in days (integer):</label>
+              <input type="text" class="task-answer" data-task="task3" data-index="2" inputmode="numeric" placeholder="Example: 22" />
+              <div class="error-text" data-error-for="task3-2">Enter a valid integer.</div>
+
+              <label>3.4 — <strong>Destination handling charges</strong> (THC + destination customs clearance) (€):</label>
+              <input type="text" class="task-answer" data-task="task3" data-index="3" inputmode="decimal" placeholder="Example: 680" />
+              <div class="error-text" data-error-for="task3-3">Enter a valid number.</div>
+
+              <label>3.5 — <strong>Total DAP Bari price</strong> = cargo value + all logistics costs for the maritime route (€):</label>
+              <input type="text" class="task-answer" data-task="task3" data-index="4" inputmode="decimal" placeholder="Example: 125750 (cargo value + logistics costs)" />
+              <div class="error-text" data-error-for="task3-4">Enter a valid number.</div>
+
+              <button onclick="submitTask('task3')">✅ Submit task</button>
+              <button class="hint-button" onclick="useHint('task3')">💡 Hint (−3)</button>
+            </div>
+          </details>
+
+          <!-- TASK 4: Air route -->
+          <details open>
+            <summary>✈️ Task 4: Air Route Analysis</summary>
+            <div class="card task-card" id="task4" data-submitted="false">
+              <p><strong>Instructions:</strong> request a quotation from SDG Airlines in the PVL.ONE environment using your <strong>team PIN</strong> and complete the air route cost breakdown. Numbers only. Decimal commas are accepted. The example values are only format examples and are not valid answers. <span class="points-tag">16 pts</span></p>
+
+              <label>4.1 — Combined <strong>inland transport</strong> (origin + destination) to/from airport (€):</label>
+              <input type="text" class="task-answer" data-task="task4" data-index="0" inputmode="decimal" placeholder="Example: 1150" />
+              <div class="error-text" data-error-for="task4-0">Enter a valid number.</div>
+
+              <label>4.2 — <strong>Airport charges</strong> (origin + destination, surcharges included) (€):</label>
+              <input type="text" class="task-answer" data-task="task4" data-index="1" inputmode="decimal" placeholder="Example: 8750" />
+              <div class="error-text" data-error-for="task4-1">Enter a valid number.</div>
+
+              <label>4.3 — <strong>Air transit time</strong>, in days (integer):</label>
+              <input type="text" class="task-answer" data-task="task4" data-index="2" inputmode="numeric" placeholder="Example: 6" />
+              <div class="error-text" data-error-for="task4-2">Enter a valid integer.</div>
+
+              <label>4.4 — <strong>Total DAP Bari price</strong> = cargo value + all logistics costs for the air route (€):</label>
+              <input type="text" class="task-answer" data-task="task4" data-index="3" inputmode="decimal" placeholder="Example: 127800" />
+              <div class="error-text" data-error-for="task4-3">Enter a valid number.</div>
+
+              <button onclick="submitTask('task4')">✅ Submit task</button>
+              <button class="hint-button" onclick="useHint('task4')">💡 Hint (−3)</button>
+            </div>
+          </details>
+
+          <!-- TAREA 5 (opcional, informe final) -->
+          <details open>
+            <summary>📋 Task 5: Final Report and Recommendation</summary>
+            <div class="card task-card" id="task5" data-submitted="false">
+              <p><strong>Instructions:</strong> download the template, complete the comparative analysis (cost, time, environmental impact, risks), and upload the report to the shared folder using your team name. <span class="points-tag">5 pts</span></p>
+              <div style="background:var(--surface-color);padding:16px;border-radius:var(--radius);margin:16px 0;border:1px solid var(--border-color);">
+                <p><strong>📄 Template:</strong> <a href="https://drive.google.com/file/d/1e00ZRbfNR_arp8ukuYnXn3Rn5qIxr3kk/view?usp=sharing" target="_blank" style="color:var(--primary-color);font-weight:500;text-decoration:none;">Download report template →</a></p>
+                <p style="margin-top:12px;"><strong>📁 Upload:</strong> <a href="https://drive.google.com/drive/folders/1VzuSOWJJ5MhY9te0KkoQyIL5yoBlVlOi" target="_blank" style="color:var(--primary-color);font-weight:500;text-decoration:none;">Shared folder →</a></p>
+              </div>
+              <p><strong>The report must include:</strong></p>
+              <ul style="margin-left:20px;color:var(--text-secondary);line-height:1.6;">
+                <li>Cost analysis of the maritime and air routes</li>
+                <li>Transit time comparison</li>
+                <li>Environmental impact assessment (use the emissions calculator)</li>
+                <li>Risk analysis by transport mode</li>
+                <li>Justified final recommendation</li>
+              </ul>
+              <button onclick="submitTask('task5')">✅ Submit task</button>
+              <button class="hint-button" onclick="useHint('task5')">💡 Hint (−3)</button>
+            </div>
+          </details>
+
+          <button id="finishActivityButton" onclick="finishActivity()">🏁 Complete mission</button>
+        </div>
+
+        <div class="right-column">
+          <div class="card resources-card" id="resourcesCard">
+            <h2>🛠️ Available Resources</h2>
+            <div class="hint">Request quotations using your PVL PIN Code — not the Team Code</div>
+            <div class="resources-grid">
+              <div class="resource-item" onclick="window.open('https://sites.google.com/playpcs.com/sdg-airlines','_blank')"><div class="resource-icon" style="background:var(--primary-color);"><i class="fas fa-plane"></i></div><span>SDG Airlines (air quotation)</span></div>
+              <div class="resource-item" onclick="window.open('https://sdglines.com/','_blank')"><div class="resource-icon" style="background:#1e40af;"><i class="fas fa-ship"></i></div><span>SDG Lines (maritime quotation)</span></div>
+              <div class="resource-item" onclick="window.open('https://sites.google.com/escolaeuropea.eu/sdgrailway/home','_blank')"><div class="resource-icon" style="background:var(--success-color);"><i class="fas fa-train"></i></div><span>SDG Railway (rail)</span></div>
+              <div class="resource-item" onclick="window.open('https://sites.google.com/playpcs.com/playhaulier/haulier-calculator','_blank')"><div class="resource-icon" style="background:#dc2626;"><i class="fas fa-truck"></i></div><span>Road transport calculator</span></div>
+              <div class="resource-item" onclick="window.open('https://www.google.com/maps','_blank')"><div class="resource-icon" style="background:#059669;"><i class="fas fa-map-marker-alt"></i></div><span>Google Maps</span></div>
+              <div class="resource-item" onclick="window.open('https://trade.ec.europa.eu/access-to-markets/en/home','_blank')"><div class="resource-icon" style="background:#7c3aed;"><i class="fas fa-globe"></i></div><span>EU Market Access</span></div>
+              <div class="resource-item" onclick="window.open('https://drive.google.com/drive/folders/1QhzlOvOh4SRe1mGFR90Lfk5qmyyaC8aB?usp=sharing','_blank')"><div class="resource-icon" style="background:#0f766e;"><i class="fas fa-file-alt"></i></div><span>Reference Documents</span></div>
+              <div class="resource-item" onclick="window.open('https://www.carboncare.org/es/co2-emissionsrechner','_blank')"><div class="resource-icon" style="background:#065f46;"><i class="fas fa-leaf"></i></div><span>Emissions calculator</span></div>
+              <div class="resource-item" onclick="openExtraQuiz()"><div class="resource-icon" style="background:var(--warning-color);"><i class="fas fa-star"></i></div><span>Bonus quiz (+points)</span></div>
+            </div>
+          </div>
+
+          <div class="card" id="teamCredentialsBox">
+            <h2>🔐 Team Credentials</h2>
+            <div id="teamCredentialsContent"><p><em>Loading credentials...</em></p></div>
+            <button id="downloadCredentialsBtn" onclick="downloadCredentials()">📄 Download credentials</button>
+          </div>
+
+          <div id="generalInfo">
+            <h3 style="color:var(--primary-color);margin-bottom:12px;font-size:16px;">📊 Scoring System</h3>
+            <p>• <strong>Tasks 1 and 2:</strong> each question is worth 2 points</p>
+            <p>• <strong>Tasks 3 and 4:</strong> most items are worth 2 points; the DAP calculation is worth 10 points</p>
+            <p>• <strong>Quiz bonus:</strong> up to 10 extra points</p>
+            <p>• <strong>Hints:</strong> −3 points each (use them wisely)</p>
+            <p>• <strong>Badges:</strong> unlock achievements by completing special objectives</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Case Study Modal -->
+  <div id="caseStudyModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" tabindex="0" onclick="closeCaseStudyModal()" onkeypress="if(event.key==='Enter')closeCaseStudyModal()">×</span>
+      <h2>📋 Full Case Study</h2>
+      <div id="caseStudyContent">
+        <h3 style="color:var(--primary-color);margin-bottom:16px;">Scenario</h3>
+        <p style="margin-bottom:20px;">
+          <strong>Dear Export and Import Team,</strong><br><br>
+          We need your expertise to prepare a complete report on transport options to ship our <strong>Tecnomaq LT-2000</strong> CNC milling machine from our factory in <strong>Egypt</strong> to <strong>Bari (Italy)</strong>.
+          <br><br>
+          Before writing the final report, complete several preliminary tasks. Remember: each correct task earns points and time is critical — the timer starts when you click “Start Mission”.
+        </p>
+        <h3 style="color:var(--primary-color);margin-bottom:16px;">Preliminary Tasks</h3>
+        <p style="margin-bottom:20px;">Verify the shipment data, select the transport unit, and request quotations from companies in the PVL.ONE environment for the maritime and air routes.</p>
+        <h3 style="color:var(--primary-color);margin-bottom:16px;">Analysis Requirements</h3>
+        <ul style="margin-left:20px;margin-bottom:20px;line-height:1.6;">
+          <li><strong>Cost:</strong> DAP Bari must not exceed 20% of the machine value</li>
+          <li><strong>Transit time:</strong> estimate the lead times for each mode</li>
+          <li><strong>Environmental impact:</strong> assess sustainability</li>
+          <li><strong>Risks:</strong> identify risks and additional considerations</li>
+        </ul>
+        <div style="background:var(--warning-color);color:#fff;padding:16px;border-radius:var(--radius);margin:20px 0;">
+          <strong>⚠️ Important:</strong> the timer starts when you click “Start Mission”. Manage your time carefully (1 h 30 min).
+        </div>
+      </div>
+      <button onclick="downloadCaseStudyPDF()">📄 Download PDF version</button>
+    </div>
+  </div>
+
+  <!-- Extra Quiz Modal -->
+  <div id="extraQuizModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" tabindex="0" onclick="closeExtraQuiz()" onkeypress="if(event.key==='Enter')closeExtraQuiz()">×</span>
+      <h2>⭐ Knowledge Bonus Quiz</h2>
+      <p style="color:var(--text-secondary);margin-bottom:24px;">Test your transport and logistics knowledge to earn extra points. Each correct answer is worth 1 point.</p>
+      <div id="extraQuizForm">
+        <div class="quiz-question"><label><strong>1.</strong> Which innovative technologies are transforming port operations?</label><div class="options">
+          <label><input type="checkbox" name="q0" value="A"> Use of renewable energy in terminals</label>
+          <label><input type="checkbox" name="q0" value="B"> Terminal automation</label>
+          <label><input type="checkbox" name="q0" value="C"> Use of fossil fuels to optimise time</label>
+          <label><input type="checkbox" name="q0" value="D"> AI and blockchain to improve security</label></div></div>
+        <div class="quiz-question"><label><strong>2.</strong> What benefits do Motorways of the Sea (MoS) offer for multimodal transport in Europe?</label><div class="options">
+          <label><input type="checkbox" name="q1" value="A"> Reduction of road congestion</label>
+          <label><input type="checkbox" name="q1" value="B"> Increase of port congestion</label>
+          <label><input type="checkbox" name="q1" value="C"> Improved sustainability by reducing CO₂ emissions</label>
+          <label><input type="checkbox" name="q1" value="D"> Reduction of airline costs</label></div></div>
+        <div class="quiz-question"><label><strong>3.</strong> Which factors should be considered when choosing a transport solution in terms of cost and transit time?</label><div class="options">
+          <label><input type="radio" name="q2" value="A"> Only fixed transport cost</label>
+          <label><input type="radio" name="q2" value="B"> Transit times and fixed and variable costs</label>
+          <label><input type="radio" name="q2" value="C"> Traffic restrictions and INCOTERMS</label>
+          <label><input type="radio" name="q2" value="D"> Only variable cost and margins</label></div></div>
+        <div class="quiz-question"><label><strong>4.</strong> How does increased transport demand affect the environment and what measures are adopted?</label><div class="options">
+          <label><input type="radio" name="q3" value="A"> It has no environmental impact</label>
+          <label><input type="radio" name="q3" value="B"> Cleaner fuels and more efficient vehicles are adopted</label>
+          <label><input type="radio" name="q3" value="C"> Only port infrastructure is improved</label>
+          <label><input type="radio" name="q3" value="D"> Technologies that increase energy consumption are adopted</label></div></div>
+        <div class="quiz-question"><label><strong>5.</strong> What do “externalities” mean in transport and how is their impact calculated?</label><div class="options">
+          <label><input type="radio" name="q4" value="A"> Costs reflected in the transport price</label>
+          <label><input type="radio" name="q4" value="B"> They are calculated only according to fuel consumption</label>
+          <label><input type="radio" name="q4" value="C"> Costs NOT reflected in the price, such as pollution</label>
+          <label><input type="radio" name="q4" value="D"> They are calculated only with vehicle efficiency</label></div></div>
+        <div class="quiz-question"><label><strong>6.</strong> Which international regulations improve safety in ports and cargo operations?</label><div class="options">
+          <label><input type="radio" name="q5" value="A"> ISPS Code and SOLAS</label>
+          <label><input type="radio" name="q5" value="B"> The Paris Agreement on emissions</label>
+          <label><input type="radio" name="q5" value="C"> Local legislation of each port</label>
+          <label><input type="radio" name="q5" value="D"> The North American Maritime Safety Code</label></div></div>
+        <div class="quiz-question"><label><strong>7.</strong> What advantages does aerodynamic design provide in transport vehicles?</label><div class="options">
+          <label><input type="radio" name="q6" value="A"> It increases fuel consumption</label>
+          <label><input type="radio" name="q6" value="B"> It reduces drag and improves efficiency</label>
+          <label><input type="radio" name="q6" value="C"> It reduces vehicle speed</label>
+          <label><input type="radio" name="q6" value="D"> It increases CO₂ emissions</label></div></div>
+        <div class="quiz-question"><label><strong>8.</strong> What is “intermodality” and why is it important in modern logistics?</label><div class="options">
+          <label><input type="radio" name="q7" value="A"> Using several transport modes while changing the transport unit</label>
+          <label><input type="radio" name="q7" value="B"> Using several modes without changing the transport unit</label>
+          <label><input type="radio" name="q7" value="C"> Reducing costs by using only trucks</label>
+          <label><input type="radio" name="q7" value="D"> Using only maritime transport</label></div></div>
+        <div class="quiz-question"><label><strong>9.</strong> What is the main function of an ERP in logistics?</label><div class="options">
+          <label><input type="radio" name="q8" value="A"> Financial management</label>
+          <label><input type="radio" name="q8" value="B"> Integrated resource management</label>
+          <label><input type="radio" name="q8" value="C"> Inventory control</label>
+          <label><input type="radio" name="q8" value="D"> Route planning</label></div></div>
+        <div class="quiz-question"><label><strong>10.</strong> What are the main European policies against climate change in transport?</label><div class="options">
+          <label><input type="radio" name="q9" value="A"> The European Green Deal (2050) and Fit for 55 (2030)</label>
+          <label><input type="radio" name="q9" value="B"> The Green Deal (2050) and fossil fuel subsidies</label>
+          <label><input type="radio" name="q9" value="C"> Fit for 55 (2030) and increased emissions</label>
+          <label><input type="radio" name="q9" value="D"> No policy, Europe has no plans for 2050</label></div></div>
+        <button type="button" onclick="submitExtraQuiz()">🎯 Submit bonus quiz</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="hintModal" class="modal"><div class="modal-content"><span class="close-modal" tabindex="0" onclick="closeHintModal()" onkeypress="if(event.key==='Enter')closeHintModal()">×</span><h2>💡 Hint</h2><p id="hintModalText"></p></div></div>
+  <div id="finishModal" class="modal"><div class="modal-content"><span class="close-modal" tabindex="0" onclick="closeFinishModal()" onkeypress="if(event.key==='Enter')closeFinishModal()">×</span><h2>🎉 Mission accomplished!</h2><p id="finishModalMessage"></p></div></div>
+  <div id="timeoutModal" class="modal"><div class="modal-content"><span class="close-modal" tabindex="0" onclick="closeTimeoutModal()" onkeypress="if(event.key==='Enter')closeTimeoutModal()">×</span><h2>⏰ Time is up!</h2><p>The time limit has been reached. Notify your trainer to review your progress.</p></div></div>
+  <div id="startWarningModal" class="modal"><div class="modal-content"><h2>⚠️ Important Notice</h2><p>Keep this window open throughout the activity. Your progress is saved on the server: if you close or reload the page, log in again with your team code.</p><p>Make sure you have all resources ready before starting.</p><button onclick="acceptStartWarning()">✅ Understood — start mission</button></div></div>
+  <div id="notification" class="notification"></div>
+
+  <script>
+    // ====== State ======
+    // The server (Code.gs) is the source of truth: it grades, keeps progress and enforces the timer.
+    const API_URL = (window.PVL_CONFIG && window.PVL_CONFIG.apiUrl) || '';
+    // ?demo opens the same mission with code 0000: nothing is graded or saved (see demoApi).
+    const DEMO = new URLSearchParams(location.search).has('demo');
+    const LS_KEY = DEMO ? 'pvlDemoCode' : 'pvlTeamCode';
+    let currentTeam = null;
+    let state = null;          // team progress returned by the server
+    let clockOffset = 0;       // server clock - local clock (ms)
+    let timerInterval, countdownInterval, notificationTimeout;
+    let busy = false, timeoutShown = false;
+    const XP_TARGET = 60; // tasks 1-4 (8+4+18+16) = 46; +5 informe; +10 quiz aprox
+    const RANKS = [
+      {min:0,  name:'Trainee'},
+      {min:15, name:'Operator'},
+      {min:30, name:'Freight Clerk'},
+      {min:45, name:'Coordinator'},
+      {min:60, name:'Forwarder Pro'}
+    ];
+    const BADGE_NAMES = {first:'First submission',streak:'Streak x3',nohint:'No hints',dap:'DAP Master',quiz:'Perfect quiz',finisher:'Mission complete'};
+
+    // ====== Utility: parse numbers with decimal comma ======
+    function parseNum(raw){
+      if(raw==null) return NaN;
+      const s = String(raw).trim().replace(/\s/g,'').replace(',', '.');
+      if(s==='' || !/^-?\d+(\.\d+)?$/.test(s)) return NaN;
+      return parseFloat(s);
+    }
+    function escapeHtml(v){
+      return String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    const now = ()=>Date.now()+clockOffset;
+
+    // ====== Server API (Apps Script web app, called from GitHub Pages) ======
+    // text/plain keeps the request "simple", so the browser sends no CORS preflight.
+    async function api(action, data){
+      if(DEMO) return demoApi(action, data||{});
+      if(!API_URL) throw new Error('API URL not configured in config.js');
+      const body = Object.assign({ action, code: currentTeam ? currentTeam.teamCode : '' }, data||{});
+      const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(body) });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const out = await res.json();
+      if(out.serverNow) clockOffset = out.serverNow - Date.now();
+      return out;
+    }
+
+    // ====== Demo mode: same responses as the server, kept in memory, answers never checked ======
+    let demoState=null;
+    const DEMO_TEAM={teamName:'DEMO TEAM',teamCode:'0000',pvlPin:'0000',erpUser:'demo.erp',erpPass:'demo-password',
+      userClickCargo:'demo.team',passClickCargo:'demo-password',urlClickCargo:'#',email:'demo.team@example.com',emailPass:'demo-password',urlEmail:'#'};
+    function demoApi(action, data){
+      const reply=(extra)=>JSON.parse(JSON.stringify(Object.assign({ok:true,serverNow:Date.now(),state:demoState},extra||{})));
+      const fail=(error)=>reply({ok:false,error});
+      if(action==='login'){
+        if(data.code!=='0000') return Promise.resolve({ok:false,error:'Demo mode: use the code 0000.'});
+        demoState=demoState||{code:'0000',teamName:DEMO_TEAM.teamName,startTime:null,deadline:null,totalScore:0,tasks:{},quiz:null,hintsUsed:0,streak:0,badges:{},finished:false,finishedAt:null};
+        return Promise.resolve(reply({team:DEMO_TEAM}));
+      }
+      const st=demoState;
+      if(action==='start'){ if(!st.startTime){ st.startTime=Date.now(); st.deadline=st.startTime+5400*1000; } return Promise.resolve(reply()); }
+      if(action==='finish'){ if(!st.finished){ if(!st.hintsUsed) st.badges.nohint=true; st.badges.finisher=true; st.finished=true; st.finishedAt=Date.now(); } return Promise.resolve(reply()); }
+      if(st.finished) return Promise.resolve(fail('The mission has already been completed.'));
+      if(action==='submit'){
+        if(st.tasks[data.taskId]) return Promise.resolve(fail('This task has already been submitted.'));
+        st.tasks[data.taskId]={points:0,feedback:['✅ Submitted (demo mode: answers are not checked; in the real activity each answer earns points)']};
+        st.badges.first=true;
+        return Promise.resolve(reply({result:st.tasks[data.taskId]}));
+      }
+      if(action==='hint'){
+        if(st.tasks[data.taskId]) return Promise.resolve(fail('This task has already been submitted.'));
+        st.totalScore-=3; st.hintsUsed++;
+        return Promise.resolve(reply({hint:'Demo hint: in the real activity this shows a tip for the task and costs 3 points, as it just did.'}));
+      }
+      if(action==='quiz'){
+        st.quiz={points:0,max:10,feedback:['Demo mode: the quiz is not graded.']};
+        return Promise.resolve(reply({result:st.quiz}));
+      }
+      return Promise.resolve(fail('Unknown action.'));
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      try{ localStorage.removeItem('pvlMissionState'); }catch(e){} // legacy local-only state
+      const input=document.getElementById('teamCode');
+      input.focus();
+      if(DEMO){
+        const bar=document.createElement('div');
+        bar.style.cssText='background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:8px;padding:10px 16px;margin-bottom:16px;text-align:center;font-weight:600;';
+        bar.textContent='DEMO MODE — log in with the code 0000. Answers are not checked and nothing is saved.';
+        document.querySelector('.container').prepend(bar);
+        input.value='0000';
+        return;
+      }
+      let saved=null;
+      try{ saved=localStorage.getItem(LS_KEY); }catch(e){}
+      if(saved && /^\d{4}$/.test(saved)){ input.value=saved; doLogin(true); }
+    });
+
+    // ====== Login ======
+    document.getElementById('loginButton').addEventListener('click', ()=>doLogin(false));
+    document.getElementById('teamCode').addEventListener('keypress', e=>{ if(e.key==='Enter') doLogin(false); });
+
+    async function doLogin(auto){
+      const code=document.getElementById('teamCode').value.trim();
+      if(!/^\d{4}$/.test(code)){ showNotification('Enter exactly 4 digits.','error'); return; }
+      if(busy) return; busy=true;
+      const lc=document.getElementById('loginContainer'); lc.classList.add('loading');
+      try{
+        const res=await api('login',{code});
+        if(res.ok){
+          currentTeam=res.team;
+          try{ localStorage.setItem(LS_KEY, code); }catch(e){}
+          showDashboard(); applyState(res.state);
+          if(res.state.finished) showFinishMessage();
+        } else {
+          if(auto){ try{ localStorage.removeItem(LS_KEY); }catch(e){} }
+          const msg=res.error||'Access error.';
+          showNotification('Access failed: '+msg,'error');
+          const em=document.getElementById('errorMessage'); em.textContent=msg; em.style.display='block';
+        }
+      }catch(err){
+        showNotification('Could not connect to the server.','error');
+      }finally{
+        busy=false; lc.classList.remove('loading');
+      }
+    }
+
+    function showDashboard(){
+      const t=currentTeam, e=escapeHtml;
+      document.getElementById('loginContainer').style.display='none';
+      document.getElementById('dashboard').style.display='block';
+      document.getElementById('teamName').textContent=t.teamName;
+      document.getElementById('teamCredentialsContent').innerHTML=`
+        <div class="credential-section">
+          <h3>🏢 ERP Access</h3>
+          <div class="credential-details">
+            <p><strong>Step 1 — Initial login:</strong></p>
+            <p>Username: <strong>${e(t.erpUser)}</strong></p>
+            <p>Password: <strong>${e(t.erpPass)}</strong></p>
+            <p><strong>Step 2 — Team login:</strong></p>
+            <p>Username: <strong>${e(t.userClickCargo)}</strong></p>
+            <p>Password: <strong>${e(t.passClickCargo)}</strong></p>
+            <p><a href="${e(t.urlClickCargo)}" target="_blank">🔗 Access the ERP</a></p>
+          </div>
+        </div>
+        <div class="credential-section">
+          <h3>📧 Email Access</h3>
+          <div class="credential-details">
+            <p>Email: <strong>${e(t.email)}</strong></p>
+            <p>Password: <strong>${e(t.emailPass)}</strong></p>
+            <p><a href="${e(t.urlEmail)}" target="_blank">🔗 Access email</a></p>
+          </div>
+        </div>
+        <div class="credential-section">
+          <h3>🔐 PIN (to request quotations from simulated companies)</h3>
+          <div class="credential-details"><p><strong>PVL PIN:</strong> ${e(t.pvlPin)}</p></div>
+        </div>`;
+    }
+
+    // ====== Apply the server state to the UI ======
+    function applyState(st){
+      const prevBadges = state ? state.badges : null;
+      state = st;
+      if(prevBadges){
+        const fresh=Object.keys(st.badges).filter(k=>!prevBadges[k]);
+        fresh.forEach((k,i)=>setTimeout(()=>showNotification('🏅 Badge unlocked: '+(BADGE_NAMES[k]||k)+'!','xp'), 2500*(i+1)));
+      }
+      refreshBadges();
+      if(st.startTime) showMissionGrid();
+      Object.entries(st.tasks).forEach(([id,r])=>renderSubmitted(id,r));
+      if(st.finished){ stopTimers(); lockAllTasks(); updateTimer(); document.getElementById('finishActivityButton').disabled=true; }
+      updateProgressBar();
+    }
+
+    function showMissionGrid(){
+      document.getElementById('missionGrid').style.display='grid';
+      document.getElementById('startMissionButton').style.display='none';
+      document.getElementById('caseStudyPreviewCard').style.display='none';
+      document.getElementById('sessionPlan').style.display='none';
+      if(!state.finished && !timerInterval){
+        timerInterval=setInterval(updateTimer,1000);
+        countdownInterval=setInterval(updateCountdownTimer,1000);
+        updateTimer(); updateCountdownTimer();
+      }
+    }
+    function stopTimers(){ clearInterval(timerInterval); clearInterval(countdownInterval); }
+    function lockAllTasks(){ document.querySelectorAll('.task-card input,.task-card button').forEach(el=>el.disabled=true); }
+
+    function renderSubmitted(taskId, r){
+      const tc=document.getElementById(taskId);
+      if(!tc || tc.dataset.submitted==='true') return;
+      tc.querySelectorAll('input,button').forEach(el=>el.disabled=true);
+      tc.dataset.submitted='true'; tc.classList.add('submitted');
+      const fd=document.createElement('div'); fd.className='feedback-summary';
+      fd.innerHTML=`<strong>Result: ${r.points} points</strong>`+r.feedback.map(f=>`<p class="${f.startsWith('✅')?'feedback-item-correct':'feedback-item-wrong'}">${escapeHtml(f)}</p>`).join('');
+      tc.appendChild(fd);
+    }
+
+    // ====== Mission start ======
+    document.getElementById('startMissionButton').addEventListener('click', ()=>{ document.getElementById('startWarningModal').style.display='flex'; });
+    function acceptStartWarning(){ document.getElementById('startWarningModal').style.display='none'; startMission(); }
+    async function startMission(){
+      const btn=document.getElementById('startMissionButton'); btn.disabled=true;
+      try{
+        const res=await api('start');
+        if(!res.ok){ showNotification(res.error,'error'); btn.disabled=false; return; }
+        applyState(res.state);
+        showNotification('Mission started! The timer is running. Good luck!','success');
+      }catch(err){
+        showNotification('Could not connect to the server. Try again.','error'); btn.disabled=false;
+      }
+    }
+
+    function elapsedString(){
+      if(!state || !state.startTime) return '0:00';
+      const e=Math.max(0,Math.floor(((state.finishedAt||now())-state.startTime)/1000));
+      const h=Math.floor(e/3600), m=Math.floor((e%3600)/60), s=e%60;
+      return h>0?`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${m}:${String(s).padStart(2,'0')}`;
+    }
+    function updateTimer(){ document.getElementById('timerDisplay').textContent=elapsedString(); }
+    function updateCountdownTimer(){
+      const r=Math.floor((state.deadline-now())/1000);
+      if(r<=0){ stopTimers(); lockAllTasks();
+        document.getElementById('countdownTimer').textContent='0:00:00';
+        if(!timeoutShown){ timeoutShown=true; document.getElementById('timeoutModal').style.display='flex'; }
+        return; }
+      const h=Math.floor(r/3600), m=Math.floor((r%3600)/60), s=r%60;
+      document.getElementById('countdownTimer').textContent=`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      if(r===600) showNotification('⚠️ 10 minutes remaining!','warning');
+      else if(r===300) showNotification('🚨 5 minutes remaining! Finish the current task.','error');
+    }
+
+    // ====== Live validation (accepts comma) ======
+    document.querySelectorAll('.task-answer').forEach(input=>{
+      input.addEventListener('input', ()=>{
+        const errorDiv=document.querySelector(`.error-text[data-error-for="${input.dataset.task}-${input.dataset.index}"]`);
+        const v=input.value.trim();
+        if(v==='' || !isNaN(parseNum(v))){ if(errorDiv)errorDiv.style.display='none'; input.style.borderColor='var(--border-color)'; }
+        else{ if(errorDiv)errorDiv.style.display='block'; input.style.borderColor='var(--error-color)'; }
+      });
+    });
+
+    // ====== Gamification ======
+    function refreshBadges(){ document.querySelectorAll('.badge').forEach(b=>{ b.classList.toggle('earned', !!(state && state.badges[b.dataset.badge])); }); }
+    function totalScore(){ return state ? state.totalScore : 0; }
+    function currentRank(){ let r=RANKS[0]; RANKS.forEach(x=>{ if(totalScore()>=x.min) r=x; }); return r; }
+    function updateLevel(){
+      const idx=RANKS.indexOf(currentRank());
+      document.getElementById('levelDisplay').textContent=idx+1;
+      document.getElementById('rankDisplay').textContent=currentRank().name;
+    }
+
+    // ====== Task submission (graded on the server) ======
+    function setCardBusy(tc, on){ tc.querySelectorAll('button').forEach(b=>b.disabled=on); }
+
+    async function submitTask(taskId){
+      const tc=document.getElementById(taskId);
+      if(tc.dataset.submitted==='true'){ showNotification('This task has already been submitted.','error'); return; }
+      const answers={radios:{}, values:[]};
+      tc.querySelectorAll('input[type="radio"]:checked').forEach(r=>{ answers.radios[r.name]=r.value; });
+      tc.querySelectorAll('.task-answer').forEach(i=>{ answers.values[Number(i.dataset.index)]=i.value; });
+      setCardBusy(tc,true);
+      try{
+        const res=await api('submit',{taskId, answers});
+        if(res.state) applyState(res.state);
+        if(!res.ok){ showNotification(res.error,'error'); if(tc.dataset.submitted!=='true') setCardBusy(tc,false); return; }
+        const pts=res.result.points;
+        showNotification(`Task ${taskId.slice(-1)}: +${pts} pts. Check the details in the card.`, pts>0?'success':'warning');
+      }catch(err){
+        showNotification('Could not reach the server. The task was NOT submitted — try again.','error');
+        setCardBusy(tc,false);
+      }
+    }
+
+    function updateScoreDisplay(){
+      const score=totalScore();
+      document.getElementById('scoreDisplay').textContent=score;
+      const xp=Math.min(score, XP_TARGET);
+      document.getElementById('progressBar').style.width=`${Math.max(0,(xp/XP_TARGET)*100)}%`;
+      document.getElementById('xpLabel').textContent=`XP ${score} / ${XP_TARGET}`;
+      updateLevel();
+    }
+    function updateProgressBar(){
+      const done=state ? Object.keys(state.tasks).length : 0;
+      const core=Math.min(done,4); // tasks 1-4 cuentan para el contador principal
+      document.getElementById('taskCountLabel').textContent=`${core} / 4 tasks`;
+      updateScoreDisplay();
+    }
+
+    function showNotification(msg,type){
+      const n=document.getElementById('notification'); n.textContent=msg; n.className=`notification ${type}`; n.style.display='block';
+      if(notificationTimeout) clearTimeout(notificationTimeout);
+      notificationTimeout=setTimeout(()=>{ n.style.display='none'; },5000);
+    }
+
+    // Hints come from the server and always cost 3 points (the score may go negative).
+    async function useHint(taskId){
+      const tc=document.getElementById(taskId);
+      setCardBusy(tc,true);
+      try{
+        const res=await api('hint',{taskId});
+        if(res.state) applyState(res.state);
+        if(!res.ok){ showNotification(res.error,'error'); return; }
+        document.getElementById('hintModalText').textContent=res.hint;
+        document.getElementById('hintModal').style.display='flex';
+        showNotification('Hint used (−3 points).','warning');
+      }catch(err){
+        showNotification('Could not reach the server. Try again.','error');
+      }finally{
+        if(tc.dataset.submitted!=='true' && !(state && state.finished)) setCardBusy(tc,false);
+      }
+    }
+
+    function openCaseStudyModal(){ document.getElementById('caseStudyModal').style.display='flex'; }
+    function closeCaseStudyModal(){ document.getElementById('caseStudyModal').style.display='none'; }
+    function openExtraQuiz(){ if(state && state.quiz){ showNotification('The bonus quiz has already been submitted.','error'); return;} document.getElementById('extraQuizModal').style.display='flex'; }
+    function closeExtraQuiz(){ document.getElementById('extraQuizModal').style.display='none'; }
+    function closeHintModal(){ document.getElementById('hintModal').style.display='none'; }
+    function closeFinishModal(){ document.getElementById('finishModal').style.display='none'; }
+    function closeTimeoutModal(){ document.getElementById('timeoutModal').style.display='none'; }
+
+    async function submitExtraQuiz(){
+      if(state && state.quiz){ showNotification('The bonus quiz has already been submitted.','error'); return; }
+      const answers={};
+      for(let i=0;i<=9;i++){
+        const checked=Array.from(document.querySelectorAll(`#extraQuizForm input[name="q${i}"]:checked`)).map(el=>el.value);
+        const isMulti=document.querySelector(`#extraQuizForm input[name="q${i}"]`).type==='checkbox';
+        answers['q'+i]=isMulti?checked:(checked[0]||null);
+      }
+      const btn=document.querySelector('#extraQuizForm button'); btn.disabled=true;
+      try{
+        const res=await api('quiz',{answers});
+        if(res.state) applyState(res.state);
+        if(!res.ok){ showNotification(res.error,'error'); return; }
+        showNotification(`Bonus quiz: +${res.result.points} points!`,'success');
+        document.getElementById('extraQuizModal').style.display='none';
+      }catch(err){
+        showNotification('Could not reach the server. The quiz was NOT submitted — try again.','error');
+      }finally{
+        btn.disabled=false;
+      }
+    }
+
+    function downloadCaseStudyPDF(){
+      const {jsPDF}=window.jspdf;
+      const doc=new jsPDF();
+      const teamName=(currentTeam&&currentTeam.teamName)?currentTeam.teamName:'Team';
+
+      doc.setFontSize(16);
+      doc.setTextColor(37,99,235);
+      doc.text('Case Study: Tecnomaq LT-2000 CNC',20,20);
+
+      doc.setFontSize(11);
+      doc.setTextColor(15,23,42);
+
+      const content=`
+Scenario
+
+Dear Export and Import Team,
+
+You are part of the Export and Import Department of Tecnomaq, a manufacturing company that needs to ship a CNC milling machine, the Tecnomaq LT-2000, from Egypt to Bari, Italy.
+
+Your mission is to prepare a professional transport analysis comparing different logistics options. You must request quotations from the simulated companies available in the PVL.ONE environment, complete the required transport data, calculate the estimated DAP cost, and recommend the most suitable transport solution.
+
+Participants and Roles
+
+1. Student Teams - Export and Import Department
+
+Each team represents the Export and Import Department of Tecnomaq.
+
+Your role is to:
+- Review the shipment information.
+- Identify the origin, destination, cargo type, and transport requirements.
+- Request quotations from the PVL.ONE simulated companies.
+- Compare maritime and air transport options.
+- Calculate the total DAP cost to Bari.
+- Prepare a final recommendation.
+
+2. Tecnomaq - The Exporting Company
+
+Tecnomaq is the company that owns the cargo. It expects a clear transport recommendation based on total logistics cost, delivery time, operational feasibility, environmental impact, and risks.
+
+3. PVL.ONE Simulated Companies
+
+Teams must contact the simulated companies in the PVL.ONE environment to request transport quotations.
+
+The main companies and tools are:
+- SDG Lines: maritime transport quotation.
+- SDG Airlines: air transport quotation.
+- SDG Railway: rail transport alternative, where applicable.
+- Road transport calculator / haulier tools: inland transport estimation.
+- Email and ERP tools: professional communication and operational information.
+
+4. Trainer / Instructor
+
+The trainer acts as the mission facilitator. The trainer introduces the case study, explains the rules, monitors progress, and reviews the final recommendations.
+
+Activity Timing
+
+The total activity duration is approximately 2 hours:
+- 15 minutes: introduction and explanation.
+- 10 minutes: case study reading.
+- 90 minutes: timed mission.
+
+Preliminary Tasks
+
+Before preparing the final report, teams must:
+- Verify the shipment data.
+- Select the correct transport unit.
+- Request quotations from the PVL.ONE simulated companies.
+- Analyse the maritime route.
+- Analyse the air route.
+- Calculate the total DAP cost.
+- Prepare a final recommendation.
+
+Analysis Requirements
+
+The final recommendation must consider:
+- Cost: total DAP Bari price.
+- Transit time: estimated lead times for each transport mode.
+- Environmental impact: sustainability and emissions.
+- Risks: operational, documentation, cost, and timing risks.
+
+Important
+
+The timer starts when you click "Start Mission". Each correct task earns points. Hints may reduce your score. Manage your time carefully and work as a professional logistics team.
+
+Final Question
+
+Which transport solution should Tecnomaq choose to ship the CNC milling machine from Egypt to Bari, and why?
+`;
+
+      const lines=doc.splitTextToSize(content.trim(),170);
+      let y=32;
+      const pageHeight=doc.internal.pageSize.height;
+
+      lines.forEach(line=>{
+        if(y>pageHeight-20){
+          doc.addPage();
+          y=20;
+        }
+        doc.text(line,20,y);
+        y+=6;
+      });
+
+      doc.save(`Case_Study_${teamName}.pdf`);
+    }
+    function downloadCredentials(){
+      const {jsPDF}=window.jspdf; const doc=new jsPDF();
+      doc.setFontSize(16); doc.setTextColor(37,99,235);
+      doc.text(`Credentials: ${currentTeam.teamName}`,20,20);
+      doc.setFontSize(12); doc.setTextColor(15,23,42);
+      doc.text('ERP Access:',20,32);
+      doc.text('Step 1 — Initial login:',20,42);
+      doc.text(`Username: ${currentTeam.erpUser||''}`,25,52); doc.text(`Password: ${currentTeam.erpPass||''}`,25,62);
+      doc.text('Step 2 — Team login:',20,72);
+      doc.text(`Username: ${currentTeam.userClickCargo}`,25,82);
+      doc.text(`Password: ${currentTeam.passClickCargo}`,25,92);
+      doc.text(`URL: ${currentTeam.urlClickCargo}`,25,102);
+      doc.text('Email Access:',20,118);
+      doc.text(`Email: ${currentTeam.email}`,25,128);
+      doc.text(`Password: ${currentTeam.emailPass}`,25,138);
+      doc.text(`URL: ${currentTeam.urlEmail}`,25,148);
+      doc.text('Security:',20,164);
+      doc.text(`PVL PIN: ${currentTeam.pvlPin}`,25,174);
+      doc.save(`Credentials_${currentTeam.teamName}.pdf`);
+    }
+
+    function showFinishMessage(){
+      const done=Object.keys(state.tasks).length;
+      const msg=`Congratulations, ${currentTeam.teamName}! You completed ${done} of 5 tasks with ${state.totalScore} points. Contact your trainer to review the results.`;
+      document.getElementById('finishModalMessage').textContent=msg;
+      document.getElementById('finishModal').style.display='flex';
+    }
+
+    async function finishActivity(){
+      const btn=document.getElementById('finishActivityButton'); btn.disabled=true;
+      try{
+        const res=await api('finish');
+        if(res.state) applyState(res.state);
+        if(!res.ok){ showNotification(res.error,'error'); btn.disabled=false; return; }
+        showFinishMessage();
+      }catch(err){
+        showNotification('Could not reach the server. Try again.','error'); btn.disabled=false;
+      }
+    }
+
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeCaseStudyModal(); closeExtraQuiz(); closeHintModal(); closeFinishModal(); closeTimeoutModal(); } });
+    window.addEventListener('beforeunload', e=>{ if(busy){ e.preventDefault(); e.returnValue=''; } });
+  </script>
+</body>
+</html>

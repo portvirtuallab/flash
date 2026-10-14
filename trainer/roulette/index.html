@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Assignment Pro — Port Virtual Flash</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script src="../../config.js"></script>
+  <script src="../../assets/trainer.js"></script>
+  <style>
+    :root {
+      --primary-color: #4A90E2;
+      --secondary-color: #50c878;
+      --text-dark: #2c3e50;
+      --text-light: #ecf0f1;
+      --danger: #e74c3c;
+      --shadow: 0 4px 15px rgba(0,0,0,0.1);
+      --transition: all 0.3s ease;
+    }
+
+    main { flex: 1; padding: 2rem; display: flex; flex-direction: column; align-items: center; }
+
+    h1 { font-size: 2.5rem; color: var(--text-dark); margin-bottom: 2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); text-align: center; }
+
+    #app { display: none; flex-direction: column; align-items: center; width: 100%; }
+
+    .customization {
+      background: white; padding: 1.5rem; border-radius: 15px; box-shadow: var(--shadow); margin-bottom: 1rem;
+      display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: center;
+    }
+    .customization label { font-weight: 600; color: var(--text-dark); }
+    .customization input {
+      padding: 0.5rem; border: 2px solid var(--primary-color); border-radius: 8px; width: 70px; font-size: 1rem;
+      font-family: inherit; transition: var(--transition);
+    }
+    .customization input:focus { outline: none; border-color: var(--secondary-color); box-shadow: 0 0 5px rgba(80,200,120,0.3); }
+
+    .button {
+      padding: 0.8rem 1.5rem; border: none; border-radius: 8px; font-weight: 600; text-transform: uppercase;
+      cursor: pointer; transition: var(--transition); background: var(--primary-color); color: var(--text-light);
+      font-family: inherit; font-size: 0.85rem;
+    }
+    .button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--shadow); background: var(--secondary-color); }
+    .button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .button.ghost { background: #fff; color: var(--primary-color); border: 2px solid var(--primary-color); }
+    .button.ghost:hover:not(:disabled) { color: #fff; }
+
+    .summary { color: #7f8c8d; font-size: 0.9rem; margin-bottom: 1.5rem; text-align: center; }
+    .summary b { color: var(--text-dark); }
+    .message { margin-bottom: 1.5rem; padding: 0.8rem 1.2rem; border-radius: 8px; font-size: 0.9rem; display: none; max-width: 800px; text-align: center; }
+    .message.error { display: block; background: #fdecea; color: #b03a2e; }
+    .message.ok { display: block; background: #e8f8ef; color: #1e8449; }
+
+    .roulette {
+      display: none; font-size: 3rem; margin: 2rem 0;
+      animation: spin 1s linear infinite; filter: drop-shadow(0 0 10px rgba(74,144,226,0.5));
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 1200px; width: 100%; }
+
+    .team-card {
+      background: white; border-radius: 15px; padding: 1.5rem; box-shadow: var(--shadow); transition: var(--transition);
+      animation: fadeInUp 0.5s ease both; position: relative; overflow: hidden;
+    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .team-card::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    }
+    .team-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+    .team-card h2 { color: var(--text-dark); font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .team-card p { color: #7f8c8d; font-weight: 600; margin-bottom: 1rem; }
+
+    .team-members { list-style: none; margin: 1rem 0; }
+    .team-members li {
+      background: #f8f9fa; padding: 0.7rem; margin: 0.5rem 0; border-radius: 8px;
+      display: flex; align-items: center; gap: 0.5rem; transition: var(--transition);
+    }
+    .team-members li:hover { background: #e9ecef; }
+    .team-members li::before { content: '👤'; }
+    .team-members .email { color: #95a5a6; font-size: 0.8rem; }
+    .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: #cfd8dc; margin-left: auto; flex-shrink: 0; }
+    .status-indicator.sent { background: #2ecc71; }
+
+    @media (max-width: 600px) { main { padding: 1rem; } h1 { font-size: 1.8rem; } }
+  </style>
+</head>
+<body>
+  <a class="back-link" href="../">← Trainer dashboard</a>
+  <main>
+    <h1>Team Assignment Pro</h1>
+
+    <form class="trainer-gate" id="gate" style="display:none">
+      <h2>Trainer access</h2>
+      <p>Enter the TRAINER code from the teams sheet.</p>
+      <input id="gateCode" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Trainer code">
+      <button class="button" type="submit">Enter</button>
+      <div class="error" id="gateError" role="alert"></div>
+    </form>
+
+    <div id="app">
+      <div class="customization">
+        <label for="teamSize">Team Size:</label>
+        <input type="number" id="teamSize" min="1" max="10" value="2">
+        <button class="button" id="generateBtn" onclick="startRoulette()">Generate Teams</button>
+        <button class="button ghost" onclick="exportCSV()">Export to CSV</button>
+        <button class="button ghost" id="emailAllBtn" onclick="emailTeams(null)">Email all teams</button>
+        <button class="button ghost" onclick="resetTeams()">Reset</button>
+      </div>
+      <div class="summary" id="summary">Loading participants…</div>
+      <div class="message" id="message" role="status"></div>
+      <div class="roulette" id="roulette" aria-hidden="true">🎡</div>
+      <div class="container" id="teamContainer"></div>
+    </div>
+  </main>
+
+  <footer class="pvl-footer">Green dot = e-mail sent to that participant. Teams are saved in the "Assignments" sheet.</footer>
+
+  <script>
+    const esc = PVL_TRAINER.escape;
+    let participants = [];   // Sheet1
+    let teams = [];          // Sheet2 (without TRAINER / SALES TEAM)
+    let assignment = null;   // last saved result: { assignedAt, groups: [{ name, code, members: [...] }] }
+
+    PVL_TRAINER.init(loadRoster);
+
+    async function loadRoster() {
+      document.getElementById('app').style.display = 'flex';
+      try {
+        const out = await PVL_TRAINER.call('roster');
+        if (!out.ok) return showMessage(out.error, 'error');
+        participants = out.participants;
+        teams = out.teams;
+        assignment = out.assignment;
+        renderSummary();
+        renderAssignment();
+      } catch (e) {
+        showMessage('Could not connect to the server.', 'error');
+      }
+    }
+
+    function renderSummary() {
+      const f = participants.filter(p => p.gender === 'f').length;
+      const m = participants.filter(p => p.gender === 'm').length;
+      const other = participants.length - f - m;
+      let txt = `<b>${participants.length}</b> participants (${f} F · ${m} M${other ? ' · ' + other + ' not specified' : ''}) · <b>${teams.length}</b> team codes available`;
+      if (assignment && assignment.assignedAt) txt += ` · Saved teams from <b>${new Date(assignment.assignedAt).toLocaleString()}</b>`;
+      document.getElementById('summary').innerHTML = txt;
+    }
+
+    function showMessage(text, type) {
+      const el = document.getElementById('message');
+      el.textContent = text || '';
+      el.className = 'message' + (text ? ' ' + type : '');
+    }
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+      return a;
+    }
+
+    // Number of teams: as many full teams as possible; a single leftover person joins a team,
+    // two or more leftovers form one more team. People are then dealt round-robin (women first,
+    // then men, then the rest) so team sizes differ by at most one and genders are spread evenly.
+    function buildGroups(size) {
+      const n = participants.length;
+      const full = Math.floor(n / size), rest = n % size;
+      const count = Math.max(1, full + (rest > 1 ? 1 : 0));
+      const order = [
+        ...shuffle(participants.filter(p => p.gender === 'f')),
+        ...shuffle(participants.filter(p => p.gender === 'm')),
+        ...shuffle(participants.filter(p => p.gender !== 'f' && p.gender !== 'm'))
+      ];
+      const groups = Array.from({ length: count }, () => []);
+      order.forEach((p, i) => groups[i % count].push(p));
+      return shuffle(groups);
+    }
+
+    async function startRoulette() {
+      const size = parseInt(document.getElementById('teamSize').value, 10);
+      if (!(size >= 1 && size <= 10)) return showMessage('Team size must be between 1 and 10.', 'error');
+      if (!participants.length) return showMessage('There are no participants in Sheet1.', 'error');
+      const groups = buildGroups(size);
+      if (groups.length > teams.length) {
+        return showMessage(`${groups.length} teams are needed but only ${teams.length} team codes exist in Sheet2. Increase the team size or add teams.`, 'error');
+      }
+      if (assignment && !confirm('This replaces the saved teams. Continue?')) return;
+
+      const btn = document.getElementById('generateBtn');
+      const roulette = document.getElementById('roulette');
+      btn.disabled = true;
+      showMessage('');
+      document.getElementById('teamContainer').innerHTML = '';
+      roulette.style.display = 'block';
+
+      const payload = groups.map((g, i) => ({ code: teams[i].code, memberIds: g.map(p => p.id) }));
+      const spin = new Promise(r => setTimeout(r, 2500));
+      try {
+        const [out] = await Promise.all([PVL_TRAINER.call('saveAssignments', { groups: payload }), spin]);
+        if (!out.ok) showMessage(out.error, 'error');
+        else { assignment = out.assignment; showMessage('Teams generated and saved.', 'ok'); }
+      } catch (e) {
+        showMessage('Could not save the teams. Check the connection and try again.', 'error');
+      }
+      roulette.style.display = 'none';
+      btn.disabled = false;
+      renderSummary();
+      renderAssignment();
+    }
+
+    function renderAssignment() {
+      const box = document.getElementById('teamContainer');
+      box.innerHTML = '';
+      if (!assignment) return;
+      assignment.groups.forEach((g, i) => {
+        const card = document.createElement('div');
+        card.className = 'team-card';
+        card.style.animationDelay = `${i * 0.1}s`;
+        card.innerHTML = `
+          <h2>${esc(g.name)}</h2>
+          <p>Code: ${esc(g.code)}</p>
+          <ul class="team-members">
+            ${g.members.map(m => `<li><span>${esc(m.firstname)} ${esc(m.lastname)}<br><span class="email">${esc(m.email)}</span></span>
+              <span class="status-indicator${m.emailedAt ? ' sent' : ''}" title="${m.emailedAt ? 'E-mail sent ' + new Date(m.emailedAt).toLocaleString() : 'E-mail not sent'}"></span></li>`).join('')}
+          </ul>
+          <button class="button" data-code="${esc(g.code)}">Send Email</button>`;
+        card.querySelector('button').addEventListener('click', () => emailTeams([g.code]));
+        box.appendChild(card);
+      });
+    }
+
+    async function emailTeams(codes) {
+      if (!assignment) return showMessage('Generate the teams first.', 'error');
+      const groups = assignment.groups.filter(g => !codes || codes.includes(g.code));
+      const people = groups.flatMap(g => g.members).filter(m => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m.email));
+      if (!people.length) return showMessage('No valid e-mail addresses for the selected team(s).', 'error');
+      const addresses = [...new Set(people.map(m => m.email))];
+      const sentBefore = people.filter(m => m.emailedAt).length;
+      const msg = `Send ${people.length} e-mail(s) with team name and team code to:\n\n${addresses.slice(0, 15).join('\n')}${addresses.length > 15 ? '\n…' : ''}` +
+        (sentBefore ? `\n\n${sentBefore} of them already received it before.` : '') + '\n\nContinue?';
+      if (!confirm(msg)) return;
+
+      document.querySelectorAll('.team-card button, #emailAllBtn').forEach(b => b.disabled = true);
+      try {
+        const out = await PVL_TRAINER.call('email', { teamCodes: codes || [] });
+        if (!out.ok) showMessage(out.error, 'error');
+        else { assignment = out.assignment; renderAssignment(); showMessage(`${out.sent} e-mail(s) sent.`, 'ok'); }
+      } catch (e) {
+        showMessage('Could not send the e-mails. Check the connection and try again.', 'error');
+      }
+      document.querySelectorAll('.team-card button, #emailAllBtn').forEach(b => b.disabled = false);
+    }
+
+    function exportCSV() {
+      if (!assignment) return showMessage('Generate the teams first.', 'error');
+      const q = v => `"${String(v).replace(/"/g, '""')}"`;
+      const lines = [['Team Name', 'Team Code', 'First name', 'Last name', 'Email'].map(q).join(',')];
+      assignment.groups.forEach(g => g.members.forEach(m => lines.push([g.name, g.code, m.firstname, m.lastname, m.email].map(q).join(','))));
+      const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `teams_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+    }
+
+    async function resetTeams() {
+      if (assignment && !confirm('Remove the saved teams from the "Assignments" sheet?')) return;
+      try {
+        const out = await PVL_TRAINER.call('clearAssignments');
+        if (!out.ok) return showMessage(out.error, 'error');
+        assignment = null;
+        document.getElementById('teamSize').value = '2';
+        showMessage('');
+        renderSummary();
+        renderAssignment();
+      } catch (e) {
+        showMessage('Could not connect to the server.', 'error');
+      }
+    }
+  </script>
+</body>
+</html>

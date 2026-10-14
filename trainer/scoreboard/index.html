@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Activity Dashboard — Port Virtual Flash</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script src="../../config.js"></script>
+  <script src="../../assets/trainer.js"></script>
+  <style>
+    :root {
+      --primary-color: #1E90FF;
+      --secondary-color: #104E8B;
+      --accent-color: #FF6F61;
+      --ok: #2ecc71;
+      --muted: #7f8c8d;
+      --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+    main { flex: 1; width: 100%; max-width: 1300px; margin: 0 auto; padding: 20px; }
+    .header { background: var(--gradient); color: #fff; padding: 20px; border-radius: 15px; text-align: center; box-shadow: var(--shadow); margin-bottom: 20px; }
+    .header h1 { font-size: 2rem; font-weight: 700; }
+    .header p { opacity: .85; font-size: .9rem; }
+
+    #app { display: none; flex-direction: column; gap: 16px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .stat { background: #fff; border-radius: 12px; box-shadow: var(--shadow); padding: 14px; text-align: center; }
+    .stat b { display: block; font-size: 1.8rem; color: var(--secondary-color); line-height: 1.2; font-variant-numeric: tabular-nums; }
+    .stat span { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
+    .toolbar button { padding: 8px 16px; border: 2px solid var(--primary-color); background: #fff; color: var(--primary-color); border-radius: 8px; font-family: inherit; font-weight: 600; cursor: pointer; }
+    .toolbar button:hover { background: var(--primary-color); color: #fff; }
+
+    .table-wrap { overflow-x: auto; background: #fff; border-radius: 12px; box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 760px; }
+    th { text-align: left; font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 12px 14px; border-bottom: 2px solid #eef2f7; white-space: nowrap; }
+    td { padding: 12px 14px; border-bottom: 1px solid #f1f4f8; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.05rem; }
+    .rank { color: var(--muted); font-weight: 700; width: 36px; }
+    .team-name { font-weight: 600; color: var(--secondary-color); }
+    .members { font-size: .78rem; color: var(--muted); }
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .75rem; font-weight: 600; white-space: nowrap; }
+    .pill.idle { background: #f1f4f8; color: var(--muted); }
+    .pill.live { background: #e3f0ff; color: #1565c0; }
+    .pill.done { background: #e8f8ef; color: #1e8449; }
+    .pill.late { background: #fdecea; color: #b03a2e; }
+    .tasks { display: flex; gap: 4px; }
+    .tasks i { width: 22px; height: 22px; border-radius: 6px; background: #f1f4f8; color: var(--muted); font-style: normal; font-size: .72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .tasks i.on { background: var(--ok); color: #fff; }
+    .neg { color: var(--accent-color); }
+    .error-box { background: #fdecea; color: #b03a2e; padding: 10px 14px; border-radius: 8px; display: none; }
+
+    @media (max-width: 700px) { .stats { grid-template-columns: repeat(2, 1fr); } .header h1 { font-size: 1.5rem; } }
+  </style>
+</head>
+<body>
+  <a class="back-link" href="../">← Trainer dashboard</a>
+  <main>
+    <div class="header">
+      <h1>Activity Dashboard</h1>
+      <p>Real-time activity monitoring · refreshes every 15 seconds</p>
+    </div>
+
+    <form class="trainer-gate" id="gate" style="display:none">
+      <h2>Trainer access</h2>
+      <p>Enter the TRAINER code from the teams sheet.</p>
+      <input id="gateCode" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Trainer code">
+      <button type="submit" style="padding:12px;border:none;border-radius:8px;background:#1E90FF;color:#fff;font-weight:600;font-family:inherit;cursor:pointer">Enter</button>
+      <div class="error" id="gateError" role="alert"></div>
+    </form>
+
+    <div id="app">
+      <div class="stats">
+        <div class="stat"><b id="sStarted">0</b><span>Teams started</span></div>
+        <div class="stat"><b id="sFinished">0</b><span>Finished</span></div>
+        <div class="stat"><b id="sTasks">0</b><span>Tasks submitted</span></div>
+        <div class="stat"><b id="sTop">—</b><span>Top score</span></div>
+      </div>
+      <div class="toolbar">
+        <span id="updated">Loading…</span>
+        <button type="button" onclick="refresh()">Refresh now</button>
+      </div>
+      <div class="error-box" id="errorBox" role="alert"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Team</th><th>Status</th><th>Tasks</th><th>Quiz</th><th>Hints</th><th>Time</th><th style="text-align:right">Score</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const esc = PVL_TRAINER.escape;
+    let data = [], clockOffset = 0, refreshTimer = null;
+
+    PVL_TRAINER.init(() => {
+      document.getElementById('app').style.display = 'flex';
+      refresh();
+      refreshTimer = setInterval(refresh, 15000);
+      setInterval(render, 1000); // keeps the remaining-time column ticking between refreshes
+    });
+
+    async function refresh() {
+      const box = document.getElementById('errorBox');
+      try {
+        const out = await PVL_TRAINER.call('scoreboard');
+        if (!out.ok) { box.textContent = out.error; box.style.display = 'block'; return; }
+        box.style.display = 'none';
+        clockOffset = out.serverNow - Date.now();
+        data = out.teams;
+        document.getElementById('updated').textContent = 'Last update: ' + new Date().toLocaleTimeString();
+        render();
+      } catch (e) {
+        box.textContent = 'Could not reach the server. Retrying…';
+        box.style.display = 'block';
+      }
+    }
+
+    function remaining(t) {
+      if (!t.deadline) return '';
+      const r = Math.floor((t.deadline - (Date.now() + clockOffset)) / 1000);
+      if (r <= 0) return '0:00:00';
+      const h = Math.floor(r / 3600), m = Math.floor((r % 3600) / 60), s = r % 60;
+      return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function status(t) {
+      if (t.finished) return '<span class="pill done">Finished</span>';
+      if (!t.started) return '<span class="pill idle">Not started</span>';
+      if (remaining(t) === '0:00:00') return '<span class="pill late">Time up</span>';
+      return `<span class="pill live">In progress · ${remaining(t)} left</span>`;
+    }
+
+    function render() {
+      const sorted = data.slice().sort((a, b) => (b.started - a.started) || (b.score - a.score) || a.name.localeCompare(b.name));
+      document.getElementById('rows').innerHTML = sorted.map((t, i) => `
+        <tr>
+          <td class="rank">${t.started ? i + 1 : ''}</td>
+          <td><div class="team-name">${esc(t.name)} <span class="members">· ${esc(t.code)}</span></div>
+              ${t.members.length ? `<div class="members">${t.members.map(esc).join(', ')}</div>` : ''}</td>
+          <td>${status(t)}</td>
+          <td><div class="tasks">${[1, 2, 3, 4, 5].map(n => `<i class="${t.tasks.includes('task' + n) ? 'on' : ''}">${n}</i>`).join('')}</div></td>
+          <td>${t.quiz == null ? '—' : t.quiz + '/10'}</td>
+          <td>${t.hints || '—'}</td>
+          <td>${esc(t.elapsed) || '—'}</td>
+          <td class="num ${t.score < 0 ? 'neg' : ''}">${t.score}</td>
+        </tr>`).join('');
+
+      const started = data.filter(t => t.started);
+      document.getElementById('sStarted').textContent = `${started.length}/${data.length}`;
+      document.getElementById('sFinished').textContent = data.filter(t => t.finished).length;
+      document.getElementById('sTasks').textContent = data.reduce((n, t) => n + t.tasks.length, 0);
+      document.getElementById('sTop').textContent = started.length ? Math.max(...started.map(t => t.score)) : '—';
+    }
+  </script>
+</body>
+</html>

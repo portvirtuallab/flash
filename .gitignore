@@ -6,3 +6,4 @@ Thumbs.db
 *.local.*
 mission-key.json
 .claude/
+mission-key.min.json

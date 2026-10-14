@@ -24,6 +24,12 @@
  *   - RESULTS sheet ("Results"): event log, automatically created.
  *   - STATE sheet ("State"): progress per team, automatically created.
  *     To run the activity again with the same codes, run resetAllProgress() from the editor.
+ *   - PARTICIPANTS sheet ("Sheet1"): firstname, lastname, email, gender (used by the roulette).
+ *   - ASSIGNMENTS sheet ("Assignments"): last roulette result, automatically created.
+ *
+ * TRAINER PAGES (trainer/roulette, trainer/scoreboard) log in with the code of the
+ * "TRAINER" row in Sheet2. Sending e-mails from the roulette needs the MailApp
+ * permission: the first deployment after this change asks you to authorise it.
  */
 
 // ====== CONSTANTS ======
@@ -37,6 +43,12 @@ const DEADLINE_GRACE_MS = 30 * 1000;       // tolerance for requests sent right 
 const HINT_COST = 3;
 const MAX_FAILED_CODES_PER_MIN = 15;       // anti brute force on the 4-digit team codes
 const TASK_IDS = ['task1', 'task2', 'task3', 'task4', 'task5'];
+
+const PARTICIPANTS_SHEET = 'Sheet1';
+const ASSIGNMENTS_SHEET = 'Assignments';
+const TRAINER_TEAM = 'TRAINER';                        // its code opens the trainer pages
+const NOT_IN_ROULETTE = ['TRAINER', 'SALES TEAM'];     // staff rows, never assigned to students
+const SITE_URL = 'https://portvirtuallab.github.io/flash/';
 
 // ====== WEB APP ENTRY POINTS ======
 function doGet() {
@@ -85,6 +97,8 @@ function handle_(req) {
     cache.put('pvl_failed_codes', String(fails + 1), 60);
     return { ok: false, error: 'Team code not found. Please check the code.' };
   }
+
+  if (action.indexOf('trainer:') === 0) return handleTrainer_(ss, team, action.slice(8), req);
 
   const handler = ACTIONS[action];
   if (!handler) return { ok: false, error: 'Unknown action.' };
@@ -378,6 +392,227 @@ function elapsed_(st) {
   const h = Math.floor(e / 3600), m = Math.floor((e % 3600) / 60), s = e % 60;
   const pad = function (n) { return (n < 10 ? '0' : '') + n; };
   return h > 0 ? h + ':' + pad(m) + ':' + pad(s) : m + ':' + pad(s);
+}
+
+// ====== TRAINER API (roulette and scoreboard pages) ======
+function handleTrainer_(ss, team, name, req) {
+  if (String(team.teamName).trim().toUpperCase() !== TRAINER_TEAM) {
+    return { ok: false, error: 'This page is only for trainers. Use the TRAINER code.' };
+  }
+  const fn = TRAINER_ACTIONS[name];
+  if (!fn) return { ok: false, error: 'Unknown action.' };
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const out = fn(ss, req) || {};
+    if (out.error) return { ok: false, error: out.error, serverNow: Date.now() };
+    out.ok = true;
+    out.serverNow = Date.now();
+    return out;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+const TRAINER_ACTIONS = {
+  login: function () {
+    return {};
+  },
+
+  roster: function (ss) {
+    return { participants: readParticipants_(ss), teams: rouletteTeams_(ss), assignment: readAssignments_(ss) };
+  },
+
+  // groups: [{ code: '3008', memberIds: [2, 5] }] — memberIds are Sheet1 row numbers.
+  saveAssignments: function (ss, req) {
+    const groups = Array.isArray(req.groups) ? req.groups : [];
+    const teams = {};
+    rouletteTeams_(ss).forEach(function (t) { teams[t.code] = t; });
+    const people = {};
+    readParticipants_(ss).forEach(function (p) { people[p.id] = p; });
+
+    const now = new Date();
+    const rows = [];
+    for (let g = 0; g < groups.length; g++) {
+      const t = teams[String(groups[g].code)];
+      if (!t) return { error: 'Unknown team code: ' + groups[g].code };
+      (groups[g].memberIds || []).forEach(function (id) {
+        const p = people[id];
+        if (p) rows.push([t.name, t.code, p.firstname, p.lastname, p.email, p.gender, p.id, now, '']);
+      });
+    }
+
+    const sheet = assignmentsSheet_(ss);
+    if (sheet.getLastRow() > 1) sheet.deleteRows(2, sheet.getLastRow() - 1);
+    if (rows.length) sheet.getRange(2, 1, rows.length, rows[0].length).setValues(rows);
+    return { assignment: readAssignments_(ss) };
+  },
+
+  clearAssignments: function (ss) {
+    const sheet = assignmentsSheet_(ss);
+    if (sheet.getLastRow() > 1) sheet.deleteRows(2, sheet.getLastRow() - 1);
+    return { assignment: null };
+  },
+
+  // Sends each assigned participant an e-mail with their team name, team code and teammates.
+  email: function (ss, req) {
+    const only = Array.isArray(req.teamCodes) && req.teamCodes.length ? req.teamCodes.map(String) : null;
+    const sheet = assignmentsSheet_(ss);
+    const last = sheet.getLastRow();
+    if (last < 2) return { error: 'There are no saved teams. Generate the teams first.' };
+
+    const data = sheet.getRange(2, 1, last - 1, 9).getValues();
+    const byTeam = {};
+    data.forEach(function (r) {
+      const code = norm_(r[1]);
+      (byTeam[code] = byTeam[code] || []).push(r[2] + ' ' + r[3]);
+    });
+
+    const targets = [];
+    data.forEach(function (r, i) {
+      const code = norm_(r[1]);
+      if (only && only.indexOf(code) < 0) return;
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(r[4]).trim())) targets.push(i);
+    });
+    const quota = MailApp.getRemainingDailyQuota();
+    if (targets.length > quota) {
+      return { error: 'Daily e-mail quota too low: ' + quota + ' left, ' + targets.length + ' needed.' };
+    }
+
+    const now = new Date();
+    targets.forEach(function (i) {
+      const r = data[i];
+      const code = norm_(r[1]);
+      const mates = byTeam[code].filter(function (n) { return n !== r[2] + ' ' + r[3]; });
+      MailApp.sendEmail({
+        to: String(r[4]).trim(),
+        name: 'Port Virtual Lab',
+        subject: 'Port Virtual Flash — your team: ' + r[0],
+        htmlBody:
+          '<p>Hello ' + esc_(r[2]) + ',</p>' +
+          '<p>You have been assigned to <b>' + esc_(r[0]) + '</b>.</p>' +
+          '<p>Your team code is <b style="font-size:18px">' + esc_(code) + '</b>. ' +
+          'You will need it to log in to the mission.</p>' +
+          (mates.length ? '<p>Your teammates: ' + mates.map(esc_).join(', ') + '</p>' : '') +
+          '<p>Start here: <a href="' + SITE_URL + '">' + SITE_URL + '</a></p>' +
+          '<p>Port Virtual Lab · Escola Europea – Intermodal Transport</p>'
+      });
+      sheet.getRange(i + 2, 9).setValue(now);
+    });
+    return { sent: targets.length, skipped: data.length - targets.length, assignment: readAssignments_(ss) };
+  },
+
+  scoreboard: function (ss) {
+    const states = {};
+    const sheet = ss.getSheetByName(STATE_SHEET);
+    if (sheet && sheet.getLastRow() > 1) {
+      sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues().forEach(function (r) {
+        if (r[9]) states[norm_(r[0])] = JSON.parse(r[9]);
+      });
+    }
+    const members = {};
+    const asg = readAssignments_(ss);
+    if (asg) asg.groups.forEach(function (g) {
+      members[g.code] = g.members.map(function (m) { return m.firstname + ' ' + m.lastname; });
+    });
+    return {
+      teams: rouletteTeams_(ss).map(function (t) {
+        const st = states[t.code];
+        return {
+          name: t.name, code: t.code, members: members[t.code] || [],
+          started: !!(st && st.startTime),
+          finished: !!(st && st.finished),
+          score: st ? st.totalScore : 0,
+          tasks: st ? Object.keys(st.tasks) : [],
+          quiz: st && st.quiz ? st.quiz.points : null,
+          hints: st ? st.hintsUsed : 0,
+          badges: st ? Object.keys(st.badges) : [],
+          elapsed: st ? elapsed_(st) : '',
+          deadline: st ? st.deadline : null
+        };
+      })
+    };
+  }
+};
+
+function readParticipants_(ss) {
+  const sheet = ss.getSheetByName(PARTICIPANTS_SHEET);
+  if (!sheet) throw new Error('The participants sheet (' + PARTICIPANTS_SHEET + ') was not found.');
+  const data = sheet.getDataRange().getValues();
+  if (data.length < 2) return [];
+  const head = data[0].map(function (h) { return String(h).trim().toLowerCase(); });
+  const col = function (name) { return head.indexOf(name); };
+  const iF = col('firstname'), iL = col('lastname'), iE = col('email'), iG = col('gender');
+  const out = [];
+  for (let i = 1; i < data.length; i++) {
+    const r = data[i];
+    const first = String(r[iF] || '').trim(), lastName = String(r[iL] || '').trim();
+    if (!first && !lastName) continue;
+    out.push({
+      id: i + 1, // sheet row number
+      firstname: first, lastname: lastName,
+      email: iE >= 0 ? String(r[iE] || '').trim() : '',
+      gender: iG >= 0 ? normGender_(r[iG]) : ''
+    });
+  }
+  return out;
+}
+
+function normGender_(v) {
+  const s = String(v || '').trim().toLowerCase();
+  if (['f', 'female', 'woman', 'w', 'mujer', 'dona'].indexOf(s) >= 0) return 'f';
+  if (['m', 'male', 'man', 'hombre', 'home'].indexOf(s) >= 0) return 'm';
+  return '';
+}
+
+function rouletteTeams_(ss) {
+  const data = ss.getSheetByName(TEAMS_SHEET).getDataRange().getValues();
+  const out = [];
+  data.forEach(function (r) {
+    const code = norm_(r[7]);
+    const name = String(r[0] || '').trim();
+    if (!/^\d{4}$/.test(code) || !name) return;
+    if (NOT_IN_ROULETTE.indexOf(name.toUpperCase()) >= 0) return;
+    out.push({ name: name, code: code });
+  });
+  return out;
+}
+
+function assignmentsSheet_(ss) {
+  let sheet = ss.getSheetByName(ASSIGNMENTS_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(ASSIGNMENTS_SHEET);
+    sheet.getRange('B:B').setNumberFormat('@');
+    sheet.appendRow(['Team', 'Code', 'First name', 'Last name', 'Email', 'Gender', 'Participant row', 'Assigned at', 'E-mailed at']);
+    sheet.getRange(1, 1, 1, 9).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function readAssignments_(ss) {
+  const sheet = ss.getSheetByName(ASSIGNMENTS_SHEET);
+  if (!sheet || sheet.getLastRow() < 2) return null;
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 9).getValues();
+  const groups = [], index = {};
+  let assignedAt = null;
+  data.forEach(function (r) {
+    const code = norm_(r[1]);
+    if (!index[code]) { index[code] = { name: String(r[0]), code: code, members: [] }; groups.push(index[code]); }
+    index[code].members.push({
+      id: Number(r[6]), firstname: String(r[2]), lastname: String(r[3]), email: String(r[4]), gender: String(r[5]),
+      emailedAt: r[8] instanceof Date ? r[8].getTime() : null
+    });
+    if (r[7] instanceof Date) assignedAt = r[7].getTime();
+  });
+  return { assignedAt: assignedAt, groups: groups };
+}
+
+function esc_(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
 }
 
 // ====== TRAINER UTILITIES (run from the Apps Script editor) ======
