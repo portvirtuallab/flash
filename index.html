@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="config.js"></script>
   <style>
     :root {
       --primary-color: #2563eb;
@@ -282,7 +283,7 @@
               <div class="error-text" data-error-for="task1-0">Enter a valid number (no units or symbols).</div>
 
               <button onclick="submitTask('task1')">✅ Submit task</button>
-              <button class="hint-button" onclick="useHint('task1','Check the commercial invoice and technical data sheet in “Reference Documents”. For the distance, use Google Maps from warehouse to port.')">💡 Hint (−3)</button>
+              <button class="hint-button" onclick="useHint('task1')">💡 Hint (−3)</button>
             </div>
           </details>
 
@@ -307,7 +308,7 @@
               </div>
 
               <button onclick="submitTask('task2')">✅ Submit task</button>
-              <button class="hint-button" onclick="useHint('task2','Remember that dimensions are shown as LENGTH x WIDTH x HEIGHT. Review the machine data sheet in Reference Documents for more information. Also, if you review the freight forwarder quotation carefully, you may find discrepancies... or not!')">💡 Hint (−3)</button>
+              <button class="hint-button" onclick="useHint('task2')">💡 Hint (−3)</button>
             </div>
           </details>
 
@@ -338,7 +339,7 @@
               <div class="error-text" data-error-for="task3-4">Enter a valid number.</div>
 
               <button onclick="submitTask('task3')">✅ Submit task</button>
-              <button class="hint-button" onclick="useHint('task3','Request a quotation from SDG Lines and combine it with the inland transport cost (consider rail where available). There is more than one option in SDG Lines, so you should consider all possible connections. DAP = cargo value + freight + inland transport + destination handling.')">💡 Hint (−3)</button>
+              <button class="hint-button" onclick="useHint('task3')">💡 Hint (−3)</button>
             </div>
           </details>
 
@@ -365,7 +366,7 @@
               <div class="error-text" data-error-for="task4-3">Enter a valid number.</div>
 
               <button onclick="submitTask('task4')">✅ Submit task</button>
-              <button class="hint-button" onclick="useHint('task4','Air freight is calculated based on chargeable weight/volume. Add airport charges, inland transport and cargo value to calculate DAP.')">💡 Hint (−3)</button>
+              <button class="hint-button" onclick="useHint('task4')">💡 Hint (−3)</button>
             </div>
           </details>
 
@@ -387,7 +388,7 @@
                 <li>Justified final recommendation</li>
               </ul>
               <button onclick="submitTask('task5')">✅ Submit task</button>
-              <button class="hint-button" onclick="useHint('task5','Download the template, complete all sections and save the report in the folder using your team name.')">💡 Hint (−3)</button>
+              <button class="hint-button" onclick="useHint('task5')">💡 Hint (−3)</button>
             </div>
           </details>
 
@@ -525,18 +526,19 @@
   <div id="hintModal" class="modal"><div class="modal-content"><span class="close-modal" tabindex="0" onclick="closeHintModal()" onkeypress="if(event.key==='Enter')closeHintModal()">×</span><h2>💡 Hint</h2><p id="hintModalText"></p></div></div>
   <div id="finishModal" class="modal"><div class="modal-content"><span class="close-modal" tabindex="0" onclick="closeFinishModal()" onkeypress="if(event.key==='Enter')closeFinishModal()">×</span><h2>🎉 Mission accomplished!</h2><p id="finishModalMessage"></p></div></div>
   <div id="timeoutModal" class="modal"><div class="modal-content"><span class="close-modal" tabindex="0" onclick="closeTimeoutModal()" onkeypress="if(event.key==='Enter')closeTimeoutModal()">×</span><h2>⏰ Time is up!</h2><p>The time limit has been reached. Notify your trainer to review your progress.</p></div></div>
-  <div id="startWarningModal" class="modal"><div class="modal-content"><h2>⚠️ Important Notice</h2><p>Keep this window open throughout the activity. Your progress is saved on this device.</p><p>Make sure you have all resources ready before starting.</p><button onclick="acceptStartWarning()">✅ Understood — start mission</button></div></div>
+  <div id="startWarningModal" class="modal"><div class="modal-content"><h2>⚠️ Important Notice</h2><p>Keep this window open throughout the activity. Your progress is saved on the server: if you close or reload the page, log in again with your team code.</p><p>Make sure you have all resources ready before starting.</p><button onclick="acceptStartWarning()">✅ Understood — start mission</button></div></div>
   <div id="notification" class="notification"></div>
 
   <script>
     // ====== State ======
+    // The server (Code.gs) is the source of truth: it grades, keeps progress and enforces the timer.
+    const API_URL = (window.PVL_CONFIG && window.PVL_CONFIG.apiUrl) || '';
+    const LS_KEY = 'pvlTeamCode';
     let currentTeam = null;
-    let timerInterval, countdownInterval, startTime;
-    let totalScore = 0, countdownDeadline;
-    let extraQuizSubmitted = false;
-    let isFetching = false, notificationTimeout;
-    let correctStreak = 0, hintsUsed = 0;
-    const earnedBadges = {};
+    let state = null;          // team progress returned by the server
+    let clockOffset = 0;       // server clock - local clock (ms)
+    let timerInterval, countdownInterval, notificationTimeout;
+    let busy = false, timeoutShown = false;
     const XP_TARGET = 60; // tasks 1-4 (8+4+18+16) = 46; +5 informe; +10 quiz aprox
     const RANKS = [
       {min:0,  name:'Trainee'},
@@ -545,6 +547,7 @@
       {min:45, name:'Coordinator'},
       {min:60, name:'Forwarder Pro'}
     ];
+    const BADGE_NAMES = {first:'First submission',streak:'Streak x3',nohint:'No hints',dap:'DAP Master',quiz:'Perfect quiz',finisher:'Mission complete'};
 
     // ====== Utility: parse numbers with decimal comma ======
     function parseNum(raw){
@@ -553,144 +556,160 @@
       if(s==='' || !/^-?\d+(\.\d+)?$/.test(s)) return NaN;
       return parseFloat(s);
     }
+    function escapeHtml(v){
+      return String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    const now = ()=>Date.now()+clockOffset;
 
-    // ====== Local persistence ======
-    function saveState(){
-      const submittedTasks={};
-      ['task1','task2','task3','task4','task5'].forEach(id=>{
-        const el=document.getElementById(id);
-        if(el) submittedTasks[id]=el.dataset.submitted==='true';
-      });
-      try{
-        localStorage.setItem('pvlMissionState', JSON.stringify({
-          currentTeam, totalScore, extraQuizSubmitted, startTime, countdownDeadline,
-          submittedTasks, correctStreak, hintsUsed, earnedBadges
-        }));
-      }catch(e){}
+    // ====== Server API (Apps Script web app, called from GitHub Pages) ======
+    // text/plain keeps the request "simple", so the browser sends no CORS preflight.
+    async function api(action, data){
+      if(!API_URL) throw new Error('API URL not configured in config.js');
+      const body = Object.assign({ action, code: currentTeam ? currentTeam.teamCode : '' }, data||{});
+      const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(body) });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const out = await res.json();
+      if(out.serverNow) clockOffset = out.serverNow - Date.now();
+      return out;
     }
 
     document.addEventListener('DOMContentLoaded', ()=>{
-      document.getElementById('teamCode').focus();
+      try{ localStorage.removeItem('pvlMissionState'); }catch(e){} // legacy local-only state
+      const input=document.getElementById('teamCode');
+      input.focus();
       let saved=null;
-      try{ saved=localStorage.getItem('pvlMissionState'); }catch(e){}
-      if(saved){
-        try{
-          const st=JSON.parse(saved);
-          if(st.currentTeam){
-            currentTeam=st.currentTeam; totalScore=st.totalScore||0;
-            extraQuizSubmitted=st.extraQuizSubmitted||false; startTime=st.startTime||null;
-            correctStreak=st.correctStreak||0; hintsUsed=st.hintsUsed||0;
-            Object.assign(earnedBadges, st.earnedBadges||{});
-            showDashboard(); updateScoreDisplay(); refreshBadges();
-            if(startTime){
-              document.getElementById('missionGrid').style.display='grid';
-              document.getElementById('startMissionButton').style.display='none';
-              document.getElementById('caseStudyPreviewCard').style.display='none';
-              document.getElementById('sessionPlan').style.display='none';
-              if(st.submittedTasks){
-                Object.entries(st.submittedTasks).forEach(([taskId,done])=>{
-                  if(done){
-                    const tc=document.getElementById(taskId);
-                    if(tc){ tc.dataset.submitted='true'; tc.classList.add('submitted');
-                      tc.querySelectorAll('input,button').forEach(el=>el.disabled=true);
-                      const n=document.createElement('p'); n.style.cssText='color:var(--success-color);font-weight:600;margin-top:12px;'; n.textContent='✅ Task previously submitted'; tc.appendChild(n);
-                    }
-                  }
-                });
-              }
-              countdownDeadline=st.countdownDeadline||Date.now()+5400*1000;
-              timerInterval=setInterval(updateTimer,1000);
-              countdownInterval=setInterval(updateCountdownTimer,1000);
-              updateCountdownTimer();
-            }
-            updateProgressBar();
-          }
-        }catch(e){ try{localStorage.removeItem('pvlMissionState');}catch(_){} }
-      }
+      try{ saved=localStorage.getItem(LS_KEY); }catch(e){}
+      if(saved && /^\d{4}$/.test(saved)){ input.value=saved; doLogin(true); }
     });
 
-    // ====== Login (server-side, sin CORS) ======
-    document.getElementById('loginButton').addEventListener('click', doLogin);
-    document.getElementById('teamCode').addEventListener('keypress', e=>{ if(e.key==='Enter') doLogin(); });
+    // ====== Login ======
+    document.getElementById('loginButton').addEventListener('click', ()=>doLogin(false));
+    document.getElementById('teamCode').addEventListener('keypress', e=>{ if(e.key==='Enter') doLogin(false); });
 
-    function doLogin(){
+    async function doLogin(auto){
       const code=document.getElementById('teamCode').value.trim();
       if(!/^\d{4}$/.test(code)){ showNotification('Enter exactly 4 digits.','error'); return; }
-      if(isFetching) return; isFetching=true;
+      if(busy) return; busy=true;
       const lc=document.getElementById('loginContainer'); lc.classList.add('loading');
-      google.script.run
-        .withSuccessHandler(res=>{
-          lc.classList.remove('loading'); isFetching=false;
-          if(res && res.ok){ currentTeam=res.team; showDashboard(); saveState(); }
-          else{ const msg=(res&&res.error)||'Access error.'; showNotification('Access failed: '+msg,'error'); const em=document.getElementById('errorMessage'); em.textContent=msg; em.style.display='block'; }
-        })
-        .withFailureHandler(err=>{
-          lc.classList.remove('loading'); isFetching=false;
-          showNotification('Could not connect to the server.','error');
-        })
-        .getTeamData(code);
+      try{
+        const res=await api('login',{code});
+        if(res.ok){
+          currentTeam=res.team;
+          try{ localStorage.setItem(LS_KEY, code); }catch(e){}
+          showDashboard(); applyState(res.state);
+          if(res.state.finished) showFinishMessage();
+        } else {
+          if(auto){ try{ localStorage.removeItem(LS_KEY); }catch(e){} }
+          const msg=res.error||'Access error.';
+          showNotification('Access failed: '+msg,'error');
+          const em=document.getElementById('errorMessage'); em.textContent=msg; em.style.display='block';
+        }
+      }catch(err){
+        showNotification('Could not connect to the server.','error');
+      }finally{
+        busy=false; lc.classList.remove('loading');
+      }
     }
 
     function showDashboard(){
+      const t=currentTeam, e=escapeHtml;
       document.getElementById('loginContainer').style.display='none';
       document.getElementById('dashboard').style.display='block';
-      document.getElementById('teamName').textContent=currentTeam.teamName;
+      document.getElementById('teamName').textContent=t.teamName;
       document.getElementById('teamCredentialsContent').innerHTML=`
         <div class="credential-section">
           <h3>🏢 ERP Access</h3>
           <div class="credential-details">
             <p><strong>Step 1 — Initial login:</strong></p>
-            <p>Username: <strong>${currentTeam.erpUser||''}</strong></p>
-            <p>Password: <strong>${currentTeam.erpPass||''}</strong></p>
+            <p>Username: <strong>${e(t.erpUser)}</strong></p>
+            <p>Password: <strong>${e(t.erpPass)}</strong></p>
             <p><strong>Step 2 — Team login:</strong></p>
-            <p>Username: <strong>${currentTeam.userClickCargo}</strong></p>
-            <p>Password: <strong>${currentTeam.passClickCargo}</strong></p>
-            <p><a href="${currentTeam.urlClickCargo}" target="_blank">🔗 Access the ERP</a></p>
+            <p>Username: <strong>${e(t.userClickCargo)}</strong></p>
+            <p>Password: <strong>${e(t.passClickCargo)}</strong></p>
+            <p><a href="${e(t.urlClickCargo)}" target="_blank">🔗 Access the ERP</a></p>
           </div>
         </div>
         <div class="credential-section">
           <h3>📧 Email Access</h3>
           <div class="credential-details">
-            <p>Email: <strong>${currentTeam.email}</strong></p>
-            <p>Password: <strong>${currentTeam.emailPass}</strong></p>
-            <p><a href="${currentTeam.urlEmail}" target="_blank">🔗 Access email</a></p>
+            <p>Email: <strong>${e(t.email)}</strong></p>
+            <p>Password: <strong>${e(t.emailPass)}</strong></p>
+            <p><a href="${e(t.urlEmail)}" target="_blank">🔗 Access email</a></p>
           </div>
         </div>
         <div class="credential-section">
           <h3>🔐 PIN (to request quotations from simulated companies)</h3>
-          <div class="credential-details"><p><strong>PVL PIN:</strong> ${currentTeam.pvlPin}</p></div>
+          <div class="credential-details"><p><strong>PVL PIN:</strong> ${e(t.pvlPin)}</p></div>
         </div>`;
+    }
+
+    // ====== Apply the server state to the UI ======
+    function applyState(st){
+      const prevBadges = state ? state.badges : null;
+      state = st;
+      if(prevBadges){
+        const fresh=Object.keys(st.badges).filter(k=>!prevBadges[k]);
+        fresh.forEach((k,i)=>setTimeout(()=>showNotification('🏅 Badge unlocked: '+(BADGE_NAMES[k]||k)+'!','xp'), 2500*(i+1)));
+      }
+      refreshBadges();
+      if(st.startTime) showMissionGrid();
+      Object.entries(st.tasks).forEach(([id,r])=>renderSubmitted(id,r));
+      if(st.finished){ stopTimers(); lockAllTasks(); updateTimer(); document.getElementById('finishActivityButton').disabled=true; }
+      updateProgressBar();
+    }
+
+    function showMissionGrid(){
+      document.getElementById('missionGrid').style.display='grid';
+      document.getElementById('startMissionButton').style.display='none';
+      document.getElementById('caseStudyPreviewCard').style.display='none';
+      document.getElementById('sessionPlan').style.display='none';
+      if(!state.finished && !timerInterval){
+        timerInterval=setInterval(updateTimer,1000);
+        countdownInterval=setInterval(updateCountdownTimer,1000);
+        updateTimer(); updateCountdownTimer();
+      }
+    }
+    function stopTimers(){ clearInterval(timerInterval); clearInterval(countdownInterval); }
+    function lockAllTasks(){ document.querySelectorAll('.task-card input,.task-card button').forEach(el=>el.disabled=true); }
+
+    function renderSubmitted(taskId, r){
+      const tc=document.getElementById(taskId);
+      if(!tc || tc.dataset.submitted==='true') return;
+      tc.querySelectorAll('input,button').forEach(el=>el.disabled=true);
+      tc.dataset.submitted='true'; tc.classList.add('submitted');
+      const fd=document.createElement('div'); fd.className='feedback-summary';
+      fd.innerHTML=`<strong>Result: ${r.points} points</strong>`+r.feedback.map(f=>`<p class="${f.startsWith('✅')?'feedback-item-correct':'feedback-item-wrong'}">${escapeHtml(f)}</p>`).join('');
+      tc.appendChild(fd);
     }
 
     // ====== Mission start ======
     document.getElementById('startMissionButton').addEventListener('click', ()=>{ document.getElementById('startWarningModal').style.display='flex'; });
     function acceptStartWarning(){ document.getElementById('startWarningModal').style.display='none'; startMission(); }
-    function startMission(){
-      startTime=Date.now();
-      timerInterval=setInterval(updateTimer,1000);
-      countdownDeadline=Date.now()+5400*1000; // 1:30:00
-      updateCountdownTimer();
-      countdownInterval=setInterval(updateCountdownTimer,1000);
-      document.getElementById('missionGrid').style.display='grid';
-      document.getElementById('startMissionButton').style.display='none';
-      document.getElementById('caseStudyPreviewCard').style.display='none';
-      document.getElementById('sessionPlan').style.display='none';
-      showNotification('Mission started! The timer is running. Good luck!','success');
-      saveState();
+    async function startMission(){
+      const btn=document.getElementById('startMissionButton'); btn.disabled=true;
+      try{
+        const res=await api('start');
+        if(!res.ok){ showNotification(res.error,'error'); btn.disabled=false; return; }
+        applyState(res.state);
+        showNotification('Mission started! The timer is running. Good luck!','success');
+      }catch(err){
+        showNotification('Could not connect to the server. Try again.','error'); btn.disabled=false;
+      }
     }
 
     function elapsedString(){
-      if(!startTime) return '0:00';
-      const e=Math.floor((Date.now()-startTime)/1000);
+      if(!state || !state.startTime) return '0:00';
+      const e=Math.max(0,Math.floor(((state.finishedAt||now())-state.startTime)/1000));
       const h=Math.floor(e/3600), m=Math.floor((e%3600)/60), s=e%60;
       return h>0?`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${m}:${String(s).padStart(2,'0')}`;
     }
     function updateTimer(){ document.getElementById('timerDisplay').textContent=elapsedString(); }
     function updateCountdownTimer(){
-      const r=Math.floor((countdownDeadline-Date.now())/1000);
-      if(r<=0){ clearInterval(countdownInterval); clearInterval(timerInterval);
-        document.querySelectorAll('.task-card input,.task-card button').forEach(el=>el.disabled=true);
-        document.getElementById('timeoutModal').style.display='flex'; return; }
+      const r=Math.floor((state.deadline-now())/1000);
+      if(r<=0){ stopTimers(); lockAllTasks();
+        document.getElementById('countdownTimer').textContent='0:00:00';
+        if(!timeoutShown){ timeoutShown=true; document.getElementById('timeoutModal').style.display='flex'; }
+        return; }
       const h=Math.floor(r/3600), m=Math.floor((r%3600)/60), s=r%60;
       document.getElementById('countdownTimer').textContent=`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
       if(r===600) showNotification('⚠️ 10 minutes remaining!','warning');
@@ -708,112 +727,47 @@
     });
 
     // ====== Gamification ======
-    function awardBadge(key){
-      if(earnedBadges[key]) return;
-      earnedBadges[key]=true; refreshBadges();
-      const names={first:'First submission',streak:'Streak x3',nohint:'No hints',dap:'DAP Master',quiz:'Perfect quiz',finisher:'Mission complete'};
-      showNotification('🏅 Badge unlocked: '+(names[key]||key)+'!','xp');
-    }
-    function refreshBadges(){ document.querySelectorAll('.badge').forEach(b=>{ if(earnedBadges[b.dataset.badge]) b.classList.add('earned'); }); }
-    function currentRank(){ let r=RANKS[0]; RANKS.forEach(x=>{ if(totalScore>=x.min) r=x; }); return r; }
+    function refreshBadges(){ document.querySelectorAll('.badge').forEach(b=>{ b.classList.toggle('earned', !!(state && state.badges[b.dataset.badge])); }); }
+    function totalScore(){ return state ? state.totalScore : 0; }
+    function currentRank(){ let r=RANKS[0]; RANKS.forEach(x=>{ if(totalScore()>=x.min) r=x; }); return r; }
     function updateLevel(){
       const idx=RANKS.indexOf(currentRank());
       document.getElementById('levelDisplay').textContent=idx+1;
       document.getElementById('rankDisplay').textContent=currentRank().name;
     }
 
-    // ====== Task submission ======
-    function submitTask(taskId){
+    // ====== Task submission (graded on the server) ======
+    function setCardBusy(tc, on){ tc.querySelectorAll('button').forEach(b=>b.disabled=on); }
+
+    async function submitTask(taskId){
       const tc=document.getElementById(taskId);
       if(tc.dataset.submitted==='true'){ showNotification('This task has already been submitted.','error'); return; }
-      let points=0, feedback=[], allCorrect=true;
-      const add=(ok,okMsg,koMsg,pts)=>{ if(ok){points+=pts; feedback.push('✅ '+okMsg);} else {feedback.push('❌ '+koMsg); allCorrect=false;} };
-
-      if(taskId==='task1'){
-        const q1=document.querySelector('input[name="t1_q1"]:checked');
-        add(q1&&q1.value==='egypt','Country of origin correct','Country of origin incorrect',2);
-        const q2=document.querySelector('input[name="t1_q2"]:checked');
-        add(q2&&q2.value==='italy','Destination country correct','Destination country incorrect',2);
-        const q3=document.querySelector('input[name="t1_q3"]:checked');
-        add(q3&&q3.value==='no','Cargo classification correct','Cargo classification incorrect',2);
-        const d=parseNum(tc.querySelector('input[data-index="0"]').value);
-        add(!isNaN(d)&&d>=1500&&d<=2100,'Distance within the acceptable range','Distance out of range or invalid',2);
-
-      } else if(taskId==='task2'){
-        const q1=tc.querySelector('input[name="q2_1"]:checked');
-        add(q1&&q1.value==='20','Transport unit correct','Transport unit incorrect',2);
-        const q2=tc.querySelector('input[name="q2_2"]:checked');
-        add(q2&&q2.value==='yes','Discrepancies correctly identified','Discrepancies were not identified',2);
-
-      } else if(taskId==='task3'){
-        const i=tc.querySelectorAll('.task-answer');
-        let v=parseNum(i[0].value); add(!isNaN(v)&&v>=1400&&v<=1600,'Freight within range','Freight out of range or invalid',2);
-        v=parseNum(i[1].value); add(!isNaN(v)&&v>=700&&v<=1200,'Inland transport correct','Inland transport out of range',2);
-        v=parseNum(i[2].value); add(!isNaN(v)&&v>=3&&v<=18,'Transit time is reasonable','Transit time is unrealistic',2);
-        v=parseNum(i[3].value); add(!isNaN(v)&&v>=300&&v<=600,'Destination charges correct','Destination charges out of range',2);
-        v=parseNum(i[4].value);
-        if(!isNaN(v)&&v>=123000&&v<=125000){ points+=10; feedback.push('✅ Excellent DAP calculation (+10)'); awardBadge('dap'); }
-        else { feedback.push('❌ DAP calculation needs review or is invalid'); allCorrect=false; }
-
-      } else if(taskId==='task4'){
-        const i=tc.querySelectorAll('.task-answer');
-        let v=parseNum(i[0].value); add(!isNaN(v)&&v>=100&&v<=1000,'Inland transport is reasonable','Inland transport out of range',2);
-        v=parseNum(i[1].value); add(!isNaN(v)&&v>=9000&&v<=11000,'Airport charges correct','Airport charges out of range',2);
-        v=parseNum(i[2].value); add(!isNaN(v)&&v>=2&&v<=5,'Air transit time is realistic','Air transit time is unrealistic',2);
-        v=parseNum(i[3].value);
-        if(!isNaN(v)&&v>=129000&&v<=131500){ points+=10; feedback.push('✅ Excellent DAP price (+10)'); awardBadge('dap'); }
-        else { feedback.push('❌ DAP price needs review or is invalid'); allCorrect=false; }
-
-      } else if(taskId==='task5'){
-        points+=5; allCorrect=true;
-        feedback.push('✅ Final report task completed');
-        feedback.push('📁 Remember: save the report in the folder using your team name.');
+      const answers={radios:{}, values:[]};
+      tc.querySelectorAll('input[type="radio"]:checked').forEach(r=>{ answers.radios[r.name]=r.value; });
+      tc.querySelectorAll('.task-answer').forEach(i=>{ answers.values[Number(i.dataset.index)]=i.value; });
+      setCardBusy(tc,true);
+      try{
+        const res=await api('submit',{taskId, answers});
+        if(res.state) applyState(res.state);
+        if(!res.ok){ showNotification(res.error,'error'); if(tc.dataset.submitted!=='true') setCardBusy(tc,false); return; }
+        const pts=res.result.points;
+        showNotification(`Task ${taskId.slice(-1)}: +${pts} pts. Check the details in the card.`, pts>0?'success':'warning');
+      }catch(err){
+        showNotification('Could not reach the server. The task was NOT submitted — try again.','error');
+        setCardBusy(tc,false);
       }
-
-      // racha
-      if(allCorrect && points>0){ correctStreak++; if(correctStreak>=3) awardBadge('streak'); }
-      else { correctStreak=0; }
-
-      totalScore+=points;
-      awardBadge('first');
-      showNotification(`Task ${taskId.slice(-1)}: +${points} pts. Check the details in the card.`, points>0?'success':'warning');
-
-      updateScoreDisplay();
-      tc.querySelectorAll('input,button').forEach(el=>el.disabled=true);
-      tc.dataset.submitted='true'; tc.classList.add('submitted');
-
-      const fd=document.createElement('div'); fd.className='feedback-summary';
-      fd.innerHTML=`<strong>Result: ${points} points</strong>`+feedback.map(f=>`<p class="${f.startsWith('✅')?'feedback-item-correct':'feedback-item-wrong'}">${f}</p>`).join('');
-      tc.appendChild(fd);
-
-      updateProgressBar(); saveState();
-      sendToServer(taskId, points, feedback);
-    }
-
-    // ====== Incremental server submission (no CORS) ======
-    function sendToServer(event, points, feedbackArr){
-      if(!currentTeam) return;
-      const payload={
-        teamName: currentTeam.teamName, teamCode: currentTeam.teamCode,
-        event: event, points: points, totalScore: totalScore,
-        feedback: Array.isArray(feedbackArr)?feedbackArr.join('; '):String(feedbackArr||''),
-        elapsed: elapsedString()
-      };
-      google.script.run
-        .withSuccessHandler(()=>{})
-        .withFailureHandler(()=>{ showNotification('Could not save to the server. Saved locally.','warning'); })
-        .saveResult(payload);
     }
 
     function updateScoreDisplay(){
-      document.getElementById('scoreDisplay').textContent=totalScore;
-      const xp=Math.min(totalScore, XP_TARGET);
+      const score=totalScore();
+      document.getElementById('scoreDisplay').textContent=score;
+      const xp=Math.min(score, XP_TARGET);
       document.getElementById('progressBar').style.width=`${Math.max(0,(xp/XP_TARGET)*100)}%`;
-      document.getElementById('xpLabel').textContent=`XP ${Math.max(0,totalScore)} / ${XP_TARGET}`;
+      document.getElementById('xpLabel').textContent=`XP ${score} / ${XP_TARGET}`;
       updateLevel();
     }
     function updateProgressBar(){
-      const done=document.querySelectorAll('.task-card[data-submitted="true"]').length;
+      const done=state ? Object.keys(state.tasks).length : 0;
       const core=Math.min(done,4); // tasks 1-4 cuentan para el contador principal
       document.getElementById('taskCountLabel').textContent=`${core} / 4 tasks`;
       updateScoreDisplay();
@@ -825,43 +779,52 @@
       notificationTimeout=setTimeout(()=>{ n.style.display='none'; },5000);
     }
 
-    function useHint(taskId,hintText){
-      totalScore=Math.max(0,totalScore-3); hintsUsed++;
-      updateScoreDisplay();
-      document.getElementById('hintModalText').textContent=hintText;
-      document.getElementById('hintModal').style.display='flex';
-      showNotification('Hint used (−3 points).','warning');
-      saveState();
-      sendToServer('hint:'+taskId, -3, ['Hint used in '+taskId]);
+    // Hints come from the server and always cost 3 points (the score may go negative).
+    async function useHint(taskId){
+      const tc=document.getElementById(taskId);
+      setCardBusy(tc,true);
+      try{
+        const res=await api('hint',{taskId});
+        if(res.state) applyState(res.state);
+        if(!res.ok){ showNotification(res.error,'error'); return; }
+        document.getElementById('hintModalText').textContent=res.hint;
+        document.getElementById('hintModal').style.display='flex';
+        showNotification('Hint used (−3 points).','warning');
+      }catch(err){
+        showNotification('Could not reach the server. Try again.','error');
+      }finally{
+        if(tc.dataset.submitted!=='true' && !(state && state.finished)) setCardBusy(tc,false);
+      }
     }
 
     function openCaseStudyModal(){ document.getElementById('caseStudyModal').style.display='flex'; }
     function closeCaseStudyModal(){ document.getElementById('caseStudyModal').style.display='none'; }
-    function openExtraQuiz(){ if(extraQuizSubmitted){ showNotification('The bonus quiz has already been submitted.','error'); return;} document.getElementById('extraQuizModal').style.display='flex'; }
+    function openExtraQuiz(){ if(state && state.quiz){ showNotification('The bonus quiz has already been submitted.','error'); return;} document.getElementById('extraQuizModal').style.display='flex'; }
     function closeExtraQuiz(){ document.getElementById('extraQuizModal').style.display='none'; }
     function closeHintModal(){ document.getElementById('hintModal').style.display='none'; }
     function closeFinishModal(){ document.getElementById('finishModal').style.display='none'; }
     function closeTimeoutModal(){ document.getElementById('timeoutModal').style.display='none'; }
 
-    function submitExtraQuiz(){
-      if(extraQuizSubmitted){ showNotification('The bonus quiz has already been submitted.','error'); return; }
-      let quizScore=0; const feedback=[];
-      const answers={q0:['A','B','D'],q1:['A','C'],q2:'B',q3:'B',q4:'C',q5:'A',q6:'B',q7:'B',q8:'B',q9:'A'};
-      // multi
-      [['q0',1],['q1',2]].forEach(([name,label])=>{
-        const sel=Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(i=>i.value);
-        const ok=sel.length===answers[name].length && sel.every(v=>answers[name].includes(v));
-        if(ok){ quizScore++; feedback.push(`✅ P${label}: correct`);} else feedback.push(`❌ P${label}: incorrect or incomplete`);
-      });
-      for(let i=2;i<=9;i++){
-        const sel=document.querySelector(`input[name="q${i}"]:checked`);
-        if(sel&&sel.value===answers['q'+i]){ quizScore++; feedback.push(`✅ P${i+1}: correct`);} else feedback.push(`❌ P${i+1}: incorrect or unanswered`);
+    async function submitExtraQuiz(){
+      if(state && state.quiz){ showNotification('The bonus quiz has already been submitted.','error'); return; }
+      const answers={};
+      for(let i=0;i<=9;i++){
+        const checked=Array.from(document.querySelectorAll(`#extraQuizForm input[name="q${i}"]:checked`)).map(el=>el.value);
+        const isMulti=document.querySelector(`#extraQuizForm input[name="q${i}"]`).type==='checkbox';
+        answers['q'+i]=isMulti?checked:(checked[0]||null);
       }
-      totalScore+=quizScore; extraQuizSubmitted=true; updateScoreDisplay();
-      if(quizScore===10) awardBadge('quiz');
-      showNotification(`Bonus quiz: +${quizScore} points!`,'success');
-      document.getElementById('extraQuizModal').style.display='none';
-      saveState(); sendToServer('bonusQuiz', quizScore, feedback);
+      const btn=document.querySelector('#extraQuizForm button'); btn.disabled=true;
+      try{
+        const res=await api('quiz',{answers});
+        if(res.state) applyState(res.state);
+        if(!res.ok){ showNotification(res.error,'error'); return; }
+        showNotification(`Bonus quiz: +${res.result.points} points!`,'success');
+        document.getElementById('extraQuizModal').style.display='none';
+      }catch(err){
+        showNotification('Could not reach the server. The quiz was NOT submitted — try again.','error');
+      }finally{
+        btn.disabled=false;
+      }
     }
 
     function downloadCaseStudyPDF(){
@@ -989,21 +952,27 @@ Which transport solution should Tecnomaq choose to ship the CNC milling machine 
       doc.save(`Credentials_${currentTeam.teamName}.pdf`);
     }
 
-    function finishActivity(){
-      clearInterval(timerInterval); clearInterval(countdownInterval);
-      document.querySelectorAll('.task-card input,.task-card button').forEach(el=>el.disabled=true);
-      if(hintsUsed===0) awardBadge('nohint');
-      awardBadge('finisher');
-      const done=document.querySelectorAll('.task-card[data-submitted="true"]').length;
-      const msg=`Congratulations, ${currentTeam.teamName}! You completed ${done} of 5 tasks with ${totalScore} points. Contact your trainer to review the results.`;
+    function showFinishMessage(){
+      const done=Object.keys(state.tasks).length;
+      const msg=`Congratulations, ${currentTeam.teamName}! You completed ${done} of 5 tasks with ${state.totalScore} points. Contact your trainer to review the results.`;
       document.getElementById('finishModalMessage').textContent=msg;
       document.getElementById('finishModal').style.display='flex';
-      sendToServer('FINAL', totalScore, [`Completed ${done}/5 tasks · Badges: ${Object.keys(earnedBadges).join(', ')||'none'}`]);
-      try{ localStorage.removeItem('pvlMissionState'); }catch(e){}
+    }
+
+    async function finishActivity(){
+      const btn=document.getElementById('finishActivityButton'); btn.disabled=true;
+      try{
+        const res=await api('finish');
+        if(res.state) applyState(res.state);
+        if(!res.ok){ showNotification(res.error,'error'); btn.disabled=false; return; }
+        showFinishMessage();
+      }catch(err){
+        showNotification('Could not reach the server. Try again.','error'); btn.disabled=false;
+      }
     }
 
     document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeCaseStudyModal(); closeExtraQuiz(); closeHintModal(); closeFinishModal(); closeTimeoutModal(); } });
-    window.addEventListener('beforeunload', e=>{ if(startTime && document.getElementById('missionGrid').style.display==='grid'){ e.preventDefault(); e.returnValue=''; } });
+    window.addEventListener('beforeunload', e=>{ if(busy){ e.preventDefault(); e.returnValue=''; } });
   </script>
 </body>
 </html>
