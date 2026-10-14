@@ -27,7 +27,7 @@
  */
 
 // ====== CONSTANTS ======
-const SHEET_ID = '1duKwj35SUknLsuHsZ2Pn75j6qIdnPAv0jHMm7vD1n_Y';
+const SHEET_ID = '1loS2XQ7SDvH1Tc1O4Uw0yHCWMZX2hv5SHdROOJVmoWQ';
 const TEAMS_SHEET = 'Sheet2';     // existing teams sheet
 const RESULTS_SHEET = 'Results';  // results log, automatically created
 const STATE_SHEET = 'State';      // team progress, automatically created
@@ -368,7 +368,7 @@ function logResult_(ss, team, st, entry) {
   }
   sheet.appendRow([
     new Date(), team.teamName, team.teamCode, entry.event,
-    entry.points, st.totalScore, entry.feedback || '', elapsed_(st)
+    entry.points, st.totalScore, entry.feedback || '', "'" + elapsed_(st) // text, so "25:02" is not read as 25 hours
   ]);
 }
 
