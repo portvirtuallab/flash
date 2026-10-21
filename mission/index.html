@@ -610,6 +610,26 @@
       return Promise.resolve(fail('Unknown action.'));
     }
 
+    // Demo: keep the real layout (tasks, points, inputs, quiz) but replace the questions,
+    // instructions and options with generic text, so the demo does not show the case content.
+    function demoHideQuestions(){
+      const relabel=(label, text)=>{ const inp=label.querySelector('input'); label.textContent=''; label.append(inp, ' '+text); };
+      document.querySelectorAll('.task-card').forEach((tc, t)=>{
+        if(tc.id!=='task5'){
+          const p=tc.querySelector('p'), tag=p && p.querySelector('.points-tag');
+          if(p){ p.innerHTML='<strong>Instructions:</strong> the instructions of this task are shown here during the real activity. '; if(tag) p.appendChild(tag); }
+        }
+        let q=0;
+        [...tc.children].filter(el=>el.tagName==='LABEL').forEach(l=>{ q++; l.textContent=`${t+1}.${q} — Question ${q} (shown during the real activity)`; });
+        tc.querySelectorAll('.options').forEach(o=>[...o.querySelectorAll('label')].forEach((l,i)=>relabel(l,'Option '+'ABCDEF'[i])));
+        tc.querySelectorAll('input.task-answer').forEach(i=>{ i.placeholder='Your answer'; });
+      });
+      document.querySelectorAll('#extraQuizForm .quiz-question').forEach((qq, i)=>{
+        qq.querySelector(':scope > label').innerHTML=`<strong>${i+1}.</strong> Bonus question ${i+1} (shown during the real activity)`;
+        [...qq.querySelectorAll('.options label')].forEach((l,j)=>relabel(l,'Option '+'ABCDEF'[j]));
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', ()=>{
       try{ localStorage.removeItem('pvlMissionState'); }catch(e){} // legacy local-only state
       const input=document.getElementById('teamCode');
@@ -620,6 +640,7 @@
         bar.textContent='DEMO MODE — log in with the code 0000. Answers are not checked and nothing is saved.';
         document.querySelector('.container').prepend(bar);
         input.value='0000';
+        demoHideQuestions();
         return;
       }
       let saved=null;
