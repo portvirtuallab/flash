@@ -4,55 +4,120 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Port Virtual Flash — Welcome Participants</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/site.css">
   <style>
-    .welcome { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:48px; padding:40px 16px; }
+    body { background: var(--pvl-mist); font-family: 'Lexend', 'Poppins', sans-serif; }
 
-    .ms-card { width:100%; max-width:380px; display:flex; flex-direction:column; align-items:center; gap:28px; padding:20px; }
-    .ms-icon { width:72px; height:72px; border-radius:50%; background:#b20000; display:flex; align-items:center; justify-content:center; }
-    .ms-title { text-align:center; }
-    .ms-title h2 { font-size:22px; font-weight:600; color:#111; margin:0 0 6px; }
-    .ms-title p { font-size:14px; color:#666; margin:0; }
+    .hero {
+      flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 48px 24px;
+      display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center;
+    }
+
+    .hero-art { position: relative; display: flex; justify-content: center; }
+    .hero-art::before {
+      content: ""; position: absolute; width: 82%; aspect-ratio: 1; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fff 0%, #fff 45%, rgba(255,255,255,0) 70%);
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+    }
+    .hero-art img { position: relative; width: 100%; max-width: 460px; height: auto; animation: float 6s ease-in-out infinite; }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    .eyebrow { font-size: .8rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--pvl-navy); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+    .eyebrow::before { content: ""; width: 28px; height: 3px; border-radius: 2px; background: var(--pvl-gold); }
+
+    .pvl-title { text-align: left; font-family: 'Lexend', sans-serif; font-weight: 700; font-size: clamp(1.9rem, 4vw, 2.8rem); line-height: 1.15; color: var(--pvl-navy); padding-bottom: 10px; }
+    .pvl-title::after { background: linear-gradient(90deg, var(--pvl-navy), var(--pvl-gold)); height: 4px; border-radius: 2px; }
+
+    .lead { color: #4a5568; font-size: 1rem; line-height: 1.7; margin: 18px 0 30px; max-width: 460px; font-weight: 300; }
+
+    .ms-card {
+      width: 100%; max-width: 420px; background: #fff; border-radius: 18px; padding: 26px;
+      box-shadow: 0 18px 40px rgba(12, 68, 148, .14); display: flex; flex-direction: column; gap: 20px;
+      border-top: 5px solid var(--pvl-gold);
+    }
+    .ms-head { display: flex; align-items: center; gap: 16px; }
+    .ms-icon { width: 58px; height: 58px; border-radius: 50%; background: var(--pvl-navy); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 0 0 6px rgba(12,68,148,.1); }
+    .ms-title h2 { font-size: 1.15rem; font-weight: 600; color: var(--pvl-ink); margin: 0 0 2px; }
+    .ms-title p { font-size: .85rem; color: #6a6a6a; margin: 0; }
 
     .ms-btn {
-      width:100%; padding:16px 32px; background:#b20000; color:#fff;
-      font-size:18px; font-weight:600; font-family:'Poppins',sans-serif; letter-spacing:2px; text-transform:uppercase;
-      border:none; border-radius:10px; cursor:pointer; -webkit-appearance:none;
-      transition:background .2s, transform .15s;
+      width: 100%; padding: 16px 32px; background: var(--pvl-navy); color: #fff;
+      font-size: 1rem; font-weight: 600; font-family: 'Lexend', sans-serif; letter-spacing: 3px; text-transform: uppercase;
+      border: none; border-radius: 10px; cursor: pointer; -webkit-appearance: none;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 8px 20px rgba(12,68,148,.25);
     }
-    .ms-btn:hover  { background:#d40000; transform:scale(1.03); }
-    .ms-btn:active { background:#8a0000; transform:scale(.98); }
-    .ms-btn:disabled { background:#aaa; cursor:not-allowed; transform:none; }
-    .ms-btn:focus-visible { outline:3px solid #4A90E2; outline-offset:3px; }
+    .ms-btn:hover  { background: var(--pvl-navy-dark); transform: translateY(-2px); box-shadow: 0 12px 26px rgba(12,68,148,.32); }
+    .ms-btn:active { transform: scale(.98); }
+    .ms-btn:disabled { background: #9aa9c2; cursor: not-allowed; transform: none; box-shadow: none; }
+    .ms-btn:focus-visible { outline: 3px solid var(--pvl-gold); outline-offset: 3px; }
 
-    .ms-loading { display:none; flex-direction:column; gap:12px; width:100%; }
-    .ms-bar-wrap { width:100%; height:10px; background:#e5e5e5; border-radius:99px; overflow:hidden; }
-    .ms-bar { height:100%; width:0%; background:#b20000; border-radius:99px; transition:width .9s cubic-bezier(.4,0,.2,1); }
-    .ms-msg { font-size:14px; color:#666; letter-spacing:.5px; text-align:center; min-height:20px; }
+    .ms-loading { display: none; flex-direction: column; gap: 10px; width: 100%; }
+    .ms-bar-wrap { width: 100%; height: 10px; background: var(--pvl-mist); border-radius: 99px; overflow: hidden; }
+    .ms-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--pvl-navy), var(--pvl-gold)); border-radius: 99px; transition: width .9s cubic-bezier(.4,0,.2,1); }
+    .ms-msg { font-size: .85rem; color: #6a6a6a; letter-spacing: .5px; text-align: center; min-height: 20px; }
+
+    .steps { display: flex; gap: 8px; margin-top: 22px; flex-wrap: wrap; }
+    .steps span { font-size: .75rem; color: var(--pvl-navy); background: #fff; border: 1px solid rgba(12,68,148,.15); padding: 6px 12px; border-radius: 999px; }
+    .steps span b { color: var(--pvl-gold); margin-right: 4px; }
+
+    .pvl-footer { background: #fff; border-top: 1px solid rgba(12,68,148,.1); }
+    .pvl-footer a { color: var(--pvl-navy); }
+
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: 1fr; gap: 24px; padding: 28px 16px; text-align: center; }
+      .hero-art img { max-width: 280px; }
+      .eyebrow { justify-content: center; }
+      .pvl-title { text-align: center; }
+      .lead { margin-left: auto; margin-right: auto; }
+      .ms-card { margin: 0 auto; text-align: left; }
+      .steps { justify-content: center; }
+    }
   </style>
 </head>
 <body>
-  <main class="welcome">
-    <h1 class="pvl-title">Welcome Participants</h1>
+  <header class="pvl-topbar">
+    <a href="https://www.pvl.one" target="_blank" rel="noopener noreferrer"><img src="assets/pvl-logo-white.png" alt="Port Virtual Lab"></a>
+    <div class="tag"><b>PVL.ONE</b> · Port Virtual Flash</div>
+  </header>
 
-    <div class="ms-card">
-      <div class="ms-icon" aria-hidden="true">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="5,3 19,12 5,21"/>
-        </svg>
+  <main class="hero">
+    <div class="hero-art">
+      <img src="assets/pvl-illustration.png" alt="" width="720" height="718">
+    </div>
+
+    <div>
+      <div class="eyebrow">Escola Europea · Intermodal Transport</div>
+      <h1 class="pvl-title">Welcome Participants</h1>
+      <p class="lead">Work as the export &amp; import team of a real company: request quotations, compare transport modes and recommend the best solution — against the clock.</p>
+
+      <div class="ms-card">
+        <div class="ms-head">
+          <div class="ms-icon" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="6,3 20,12 6,21" fill="#fcb434" stroke="#fcb434"/>
+            </svg>
+          </div>
+          <div class="ms-title">
+            <h2>Port Virtual Lab</h2>
+            <p>Session 003 — Interactive scenario</p>
+          </div>
+        </div>
+
+        <button class="ms-btn" id="ms-btn" onclick="startMission()">Ready to go</button>
+
+        <div class="ms-loading" id="ms-loading" role="status" aria-live="polite">
+          <div class="ms-bar-wrap"><div class="ms-bar" id="ms-bar"></div></div>
+          <div class="ms-msg" id="ms-msg">Initializing...</div>
+        </div>
       </div>
 
-      <div class="ms-title">
-        <h2>Port Virtual Lab</h2>
-        <p>Session 003 — Interactive scenario</p>
-      </div>
-
-      <button class="ms-btn" id="ms-btn" onclick="startMission()">Ready to go</button>
-
-      <div class="ms-loading" id="ms-loading" role="status" aria-live="polite">
-        <div class="ms-bar-wrap"><div class="ms-bar" id="ms-bar"></div></div>
-        <div class="ms-msg" id="ms-msg">Initializing...</div>
+      <div class="steps" aria-label="Session plan">
+        <span><b>15'</b>Introduction</span>
+        <span><b>10'</b>Case reading</span>
+        <span><b>90'</b>Timed mission</span>
       </div>
     </div>
   </main>

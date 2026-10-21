@@ -1,6 +1,30 @@
 /* Shared by the welcome, launch and trainer pages (the mission keeps its own styles). */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* PVL.ONE brand (colours and type taken from pvl.one) */
+:root {
+  --pvl-navy: #0c4494;
+  --pvl-navy-dark: #08306b;
+  --pvl-gold: #fcb434;
+  --pvl-mist: #e7ecf4;
+  --pvl-ink: #212121;
+}
+
+/* Brand top bar: white Port Virtual Lab logo on navy, gold rule underneath */
+.pvl-topbar {
+  background: var(--pvl-navy);
+  border-bottom: 4px solid var(--pvl-gold);
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.pvl-topbar img { height: 46px; width: auto; display: block; }
+.pvl-topbar .tag {
+  font-family: 'Lexend', 'Poppins', sans-serif; color: #fff; font-size: 0.85rem; letter-spacing: 2px;
+  text-transform: uppercase; opacity: 0.9; text-align: right;
+}
+.pvl-topbar .tag b { color: var(--pvl-gold); font-weight: 600; }
+@media (max-width: 520px) { .pvl-topbar { padding: 12px 16px; } .pvl-topbar img { height: 36px; } .pvl-topbar .tag { font-size: 0.7rem; letter-spacing: 1px; } }
+
 html, body { min-height: 100%; }
 body {
   font-family: 'Poppins', sans-serif;
