@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>000 · Request for the Import &amp; Export Department</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="docs.css">
+  <script src="case.js"></script>
+</head>
+<body>
+  <div class="sheet tecnomaq">
+    <div class="lh">
+      <div class="brand">TECNOMAQ<small>Internal e-mail</small></div>
+      <div class="addr"><span data-f="exporter.name"></span><br><span data-f="exporter.hq"></span></div>
+    </div>
+
+    <table>
+      <tr><th style="width:22%">From</th><td><span data-f="manager.name"></span>, <span data-f="manager.role"></span></td></tr>
+      <tr><th>To</th><td>Import &amp; Export Department — <span data-f="exporter.unit"></span></td></tr>
+      <tr><th>Date</th><td data-f="dateLong.letter"></td></tr>
+      <tr><th>Subject</th><td><b>Request for a transport options report — <span data-f="goods.name"></span></b></td></tr>
+    </table>
+
+    <div style="margin-top:18px">
+      <p>Dear Export &amp; Import Team,</p>
+      <p>We need to review the logistics chain of one of our key products, the <b data-f="goods.name"></b>, to make sure our next shipments are smooth and cost-effective.</p>
+      <p>Please prepare a report that compares the transport options — sea, air and any other feasible combination (for example sea + rail) — for shipping one unit from our factory in <b>Cairo, Egypt</b>, to our customer <b data-f="consignee.name"></b> in <b>Bari, Italy</b>. The sale is agreed <b><span data-f="shipment.incoterm"></span> <span data-f="shipment.incotermPlace"></span></b>, so every cost up to the customer's warehouse is ours.</p>
+
+      <p>Please take into account the following:</p>
+      <ul class="list">
+        <li>The total logistics cost to <b>DAP Bari must not exceed 20% of the value</b> of the machine.</li>
+        <li>Use the latest quotation from our freight forwarder, <b data-f="forwarder.name"></b>, as a reference. It is quoted <b>CIP Civitavecchia</b>, not DAP Bari, so it is not directly comparable — and please check carefully that its costs and terms are correct for this shipment.</li>
+        <li>Request your own quotations from the carriers in the PVL.ONE environment (SDG Lines, SDG Airlines, SDG Railway and the road haulier calculator) using your team PIN.</li>
+        <li>Use the commercial invoice, packing list, EUR.1 and the machine data sheet for the shipment data.</li>
+      </ul>
+
+      <p>Your report, using the template we provide, should show the breakdown of each option and recommend the one with the best balance between <b>cost, transit time, environmental impact and risk</b>.</p>
+      <p>This report is key for our decision, so I appreciate your timely attention.</p>
+      <p style="margin-top:16px">Best regards,</p>
+      <p style="margin-top:22px"><b data-f="manager.name"></b><br><span data-f="manager.role"></span>, <span data-f="exporter.name"></span></p>
+    </div>
+  </div>
+  <script src="docs.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reference Documents — Port Virtual Flash</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/site.css">
+  <style>
+    body { background: var(--pvl-mist); font-family: 'Lexend', 'Poppins', sans-serif; }
+    main { flex: 1; width: 100%; max-width: 960px; margin: 0 auto; padding: 36px 16px; }
+    h1 { color: var(--pvl-navy); font-size: 2rem; margin-bottom: 6px; }
+    .lead { color: #4a5568; margin-bottom: 26px; font-weight: 300; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
+    a.doc { display: flex; gap: 14px; align-items: flex-start; background: #fff; border-radius: 14px; padding: 16px; text-decoration: none; color: inherit;
+      box-shadow: 0 6px 18px rgba(12,68,148,.08); border-top: 4px solid transparent; transition: transform .2s, box-shadow .2s, border-color .2s; }
+    a.doc:hover, a.doc:focus-visible { transform: translateY(-3px); box-shadow: 0 12px 26px rgba(12,68,148,.15); border-top-color: var(--pvl-gold); outline: none; }
+    .num { flex-shrink: 0; width: 44px; height: 44px; border-radius: 10px; background: var(--pvl-navy); color: var(--pvl-gold); font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .doc h2 { font-size: 1rem; color: var(--pvl-navy); margin-bottom: 2px; }
+    .doc p { font-size: .82rem; color: #5a6475; line-height: 1.45; }
+    .pvl-footer { background: #fff; }
+  </style>
+</head>
+<body>
+  <header class="pvl-topbar">
+    <a href="../"><img src="../assets/pvl-logo-white.png" alt="Port Virtual Lab"></a>
+    <div class="tag"><b>PVL.ONE</b> · Reference documents</div>
+  </header>
+  <main>
+    <h1>Reference Documents</h1>
+    <p class="lead">Tecnomaq LT-2000 · Cairo, Egypt → Bari, Italy. Open a document to read it, or use <b>Print / Save as PDF</b>.</p>
+    <div class="grid">
+      <a class="doc" href="000-request.html"><div class="num">000</div><div><h2>Request from the General Manager</h2><p>Your assignment: what the report must analyse.</p></div></a>
+      <a class="doc" href="001-commercial-invoice.html"><div class="num">001</div><div><h2>Commercial Invoice &amp; Packing List</h2><p>Value, Incoterm, parties, dimensions and weights.</p></div></a>
+      <a class="doc" href="002-eur1.html"><div class="num">002</div><div><h2>EUR.1 Movement Certificate</h2><p>Preferential origin Egypt → European Union.</p></div></a>
+      <a class="doc" href="003-shipping-instructions.html"><div class="num">003</div><div><h2>Shipping Instructions</h2><p>Pick-up, booking and carrier instructions.</p></div></a>
+      <a class="doc" href="004-datasheet.html"><div class="num">004</div><div><h2>Machine Data Sheet</h2><p>Technical and shipping data of the LT-2000.</p></div></a>
+      <a class="doc" href="005-playforwarding-quotation.html"><div class="num">005</div><div><h2>PlayForwarding Quotation</h2><p>The forwarder's reference offer — check it carefully.</p></div></a>
+      <a class="doc" href="006-report-template.html"><div class="num">006</div><div><h2>Report Template</h2><p>Fill it in online and save it as PDF for your final report.</p></div></a>
+    </div>
+  </main>
+  <footer class="pvl-footer">Fictional training documents — <a href="https://www.pvl.one" target="_blank" rel="noopener noreferrer">Port Virtual Lab</a> · <a href="https://www.escolaeuropea.eu" target="_blank" rel="noopener noreferrer">Escola Europea - Intermodal Transport</a></footer>
+</body>
+</html>

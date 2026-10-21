@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>002 · EUR.1 Movement Certificate</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="docs.css">
+  <script src="case.js"></script>
+  <style>
+    .eur { --lh: #1d5c3a; }
+    .form { display: grid; grid-template-columns: 1fr 1fr; border: 2px solid #1d5c3a; }
+    .cell { border: 1px solid #9fbfae; padding: 6px 8px; min-height: 58px; font-size: 9.5pt; }
+    .cell .n { font-size: 7.5pt; font-weight: 700; color: #1d5c3a; text-transform: uppercase; letter-spacing: .4px; display: block; margin-bottom: 3px; }
+    .wide { grid-column: 1 / -1; }
+    .head { background: #eef6f1; text-align: center; font-weight: 800; font-size: 13pt; letter-spacing: 3px; color: #1d5c3a; display: flex; flex-direction: column; justify-content: center; }
+    .head small { font-size: 8pt; letter-spacing: 1px; font-weight: 600; }
+    .stamp { height: 70px; border: 1px dashed #9fbfae; margin-top: 6px; display: flex; align-items: center; justify-content: center; color: #9fbfae; font-size: 8pt; }
+  </style>
+</head>
+<body>
+  <div class="sheet eur">
+    <div class="lh">
+      <div class="brand">EUR.1<small>Movement certificate</small></div>
+      <div class="addr">Euro-Mediterranean Association Agreement<br>European Union — Egypt</div>
+    </div>
+
+    <div class="form">
+      <div class="cell"><span class="n">1. Exporter (name, full address, country)</span>
+        <b data-f="exporter.name"></b> — <span data-f="exporter.unit"></span><br><span data-f="exporter.street"></span>, <span data-f="exporter.city"></span>, <b data-f="exporter.country"></b></div>
+      <div class="cell head">EUR.1 <span data-f="shipment.euro1No"></span><small>See notes overleaf before completing this form</small></div>
+
+      <div class="cell"><span class="n">3. Consignee (optional)</span>
+        <b data-f="consignee.name"></b><br><span data-f="consignee.street"></span>, <span data-f="consignee.city"></span>, <b data-f="consignee.country"></b></div>
+      <div class="cell"><span class="n">2. Certificate used in preferential trade between</span>
+        <b>EGYPT</b><br>and<br><b>THE EUROPEAN UNION</b></div>
+
+      <div class="cell"><span class="n">4. Country in which the products are considered as originating</span><b>EGYPT</b></div>
+      <div class="cell"><span class="n">5. Country of destination</span><b>EUROPEAN UNION (ITALY)</b></div>
+
+      <div class="cell"><span class="n">6. Transport details (optional)</span>By sea from Egypt to <span data-f="shipment.destinationPort"></span> — vessel and B/L as per final booking</div>
+      <div class="cell"><span class="n">7. Remarks</span>—</div>
+
+      <div class="cell wide"><span class="n">8. Item number; marks and numbers; number and kind of packages; description of goods</span>
+        Item 1 · Marks: <span data-f="goods.marks"></span> · <span data-f="goods.packages"></span><br>
+        <b data-f="goods.name"></b> — HS <span data-f="goods.hs"></span> (<span data-f="goods.hsText"></span>)</div>
+
+      <div class="cell"><span class="n">9. Gross mass (kg) or other measure</span><span data-f="calc.gross" data-fmt="kg"></span> · <span data-f="calc.boxVolume" data-fmt="m3"></span></div>
+      <div class="cell"><span class="n">10. Invoices (optional)</span>Invoice <span data-f="shipment.invoiceNo"></span> of <span data-f="date.euro1"></span></div>
+
+      <div class="cell"><span class="n">11. Customs endorsement</span>
+        Declaration certified. Export document: form ____ No. ____<br>Customs office: Egyptian Customs Authority — Cairo<br>Issuing country: EGYPT · Date: <span data-f="date.euro1"></span>
+        <div class="stamp">Customs stamp</div></div>
+      <div class="cell"><span class="n">12. Declaration by the exporter</span>
+        I, the undersigned, declare that the goods described above meet the conditions required for the issue of this certificate.<br>Place and date: Cairo, <span data-f="date.euro1"></span>
+        <div class="stamp">Signature</div></div>
+    </div>
+
+    <p class="note">With a valid EUR.1, the goods qualify for the <b>preferential (0%) customs duty</b> on import into the EU instead of the third-country (erga omnes) duty. Import VAT in Italy still applies.</p>
+  </div>
+  <script src="docs.js"></script>
+</body>
+</html>

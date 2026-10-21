@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>006 · Transport Optimisation Report (template)</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="docs.css">
+  <script src="case.js"></script>
+  <style>
+    .fill { border-bottom: 1px dashed #9aa6b6; min-height: 1.4em; padding: 1px 3px; outline: none; background: #fbfcfe; }
+    .fill:focus { background: #fff8e6; border-bottom-color: #fcb434; }
+    .fill:empty::before { content: attr(data-ph); color: #a3adbb; }
+    td.fill, div.fill.area { min-height: 3.2em; }
+    .hint { font-size: 8.5pt; color: #0c4494; background: #eef3fb; border-radius: 6px; padding: 8px 10px; margin-bottom: 12px; }
+    @media print { .fill { background: none; border-bottom-color: transparent; } .fill:empty::before { content: ''; } .hint { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="sheet tecnomaq">
+    <div class="lh">
+      <div class="brand">TECNOMAQ<small>Import &amp; Export Department</small></div>
+      <div class="addr"><span data-f="exporter.name"></span> — <span data-f="exporter.unit"></span><br><span data-f="exporter.street"></span>, <span data-f="exporter.city"></span>, <span data-f="exporter.country"></span></div>
+    </div>
+
+    <div class="hint">Click on the grey fields to write. Your text is saved automatically in this browser. When finished, use <b>Print / Save as PDF</b> and upload the PDF to the shared folder with your team name.</div>
+
+    <h1 class="title">Transport Optimisation Report</h1>
+    <div class="kv">
+      <div class="box"><div class="lbl">Report date</div><span data-f="date.report"></span></div>
+      <div class="box"><div class="lbl">Prepared by (team)</div><div class="fill" contenteditable data-k="team" data-ph="Team name and members"></div></div>
+    </div>
+
+    <p>Dear <span data-f="manager.name"></span>,</p>
+    <p>We are pleased to present our proposed transport solution for shipping the <b data-f="goods.name"></b> from <b>Cairo, Egypt</b> to <b>Bari, Italy</b> (<span data-f="shipment.incoterm"></span> <span data-f="shipment.incotermPlace"></span>). Our recommendation considers:</p>
+    <ul class="list">
+      <li><b>Cost:</b> total logistics cost to DAP Bari within 20% of the value of the goods.</li>
+      <li><b>Transit time:</b> balance between speed and reliability.</li>
+      <li><b>Environmental impact:</b> CO₂ emissions and sustainability.</li>
+      <li><b>Risk:</b> operational, documentary, cost and timing risks.</li>
+    </ul>
+    <p>As a reference we reviewed the latest quotation from <span data-f="forwarder.name"></span> (quoted CIP Civitavecchia).</p>
+
+    <h2 class="sub">Options compared</h2>
+    <table>
+      <thead><tr><th>Option / route</th><th>Equipment</th><th class="r">Logistics cost (€)</th><th class="r">Total DAP Bari (€)</th><th class="r">Transit time</th><th class="r">CO₂</th></tr></thead>
+      <tbody>
+        <tr><td class="fill" contenteditable data-k="o1" data-ph="Sea: …"></td><td class="fill" contenteditable data-k="o1e"></td><td class="fill r" contenteditable data-k="o1c"></td><td class="fill r" contenteditable data-k="o1d"></td><td class="fill r" contenteditable data-k="o1t"></td><td class="fill r" contenteditable data-k="o1x"></td></tr>
+        <tr><td class="fill" contenteditable data-k="o2" data-ph="Air: …"></td><td class="fill" contenteditable data-k="o2e"></td><td class="fill r" contenteditable data-k="o2c"></td><td class="fill r" contenteditable data-k="o2d"></td><td class="fill r" contenteditable data-k="o2t"></td><td class="fill r" contenteditable data-k="o2x"></td></tr>
+        <tr><td class="fill" contenteditable data-k="o3" data-ph="Other: …"></td><td class="fill" contenteditable data-k="o3e"></td><td class="fill r" contenteditable data-k="o3c"></td><td class="fill r" contenteditable data-k="o3d"></td><td class="fill r" contenteditable data-k="o3t"></td><td class="fill r" contenteditable data-k="o3x"></td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">Recommended option</h2>
+    <table>
+      <tr><th style="width:30%">Transport mode</th><td class="fill" contenteditable data-k="mode"></td></tr>
+      <tr><th>Equipment</th><td class="fill" contenteditable data-k="equip"></td></tr>
+      <tr><th>Route (ports / terminals)</th><td class="fill" contenteditable data-k="route"></td></tr>
+      <tr><th>Total distance</th><td class="fill" contenteditable data-k="dist"></td></tr>
+      <tr><th>ETD / ETA</th><td class="fill" contenteditable data-k="eta"></td></tr>
+      <tr><th>Total DAP Bari (€) and % of goods value</th><td class="fill" contenteditable data-k="dap"></td></tr>
+    </table>
+
+    <h2 class="sub">Review of the PlayForwarding quotation</h2>
+    <div class="fill area" contenteditable data-k="pf" data-ph="What did you find? Is it correct for this shipment?"></div>
+
+    <h2 class="sub">Risks and justification</h2>
+    <div class="fill area" contenteditable data-k="why" data-ph="Why this option? Main risks and how to manage them."></div>
+
+    <p style="margin-top:14px">We trust that this proposal meets the company's operational and financial objectives while supporting our commitment to sustainable and efficient logistics. Please contact us if you need any further information.</p>
+    <p style="margin-top:12px">Best regards,</p>
+    <div class="fill" contenteditable data-k="sign" data-ph="Names of the team members" style="margin-top:6px"></div>
+  </div>
+  <script src="docs.js"></script>
+  <script>
+    // Autosave of the editable fields in this browser only.
+    const KEY = 'pvlReportDraft';
+    let draft = {};
+    try { draft = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+    document.querySelectorAll('[data-k]').forEach((el) => {
+      if (draft[el.dataset.k]) el.textContent = draft[el.dataset.k];
+      el.addEventListener('input', () => {
+        draft[el.dataset.k] = el.textContent;
+        try { localStorage.setItem(KEY, JSON.stringify(draft)); } catch (e) {}
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>003 · Shipping Instructions</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="docs.css">
+  <script src="case.js"></script>
+</head>
+<body>
+  <div class="sheet tecnomaq">
+    <div class="lh">
+      <div class="brand">TECNOMAQ<small><span data-f="exporter.name"></span> · <span data-f="exporter.unit"></span></small></div>
+      <div class="addr"><span data-f="exporter.street"></span><br><span data-f="exporter.city"></span>, <span data-f="exporter.country"></span><br>Tax Registration No.: <span data-f="exporter.taxId"></span></div>
+    </div>
+
+    <h1 class="title">Shipping Instructions</h1>
+
+    <div class="box" style="background:#fff7e8;border-color:#f1c27d;margin-bottom:12px">
+      <div class="lbl">Instructions to the carrier</div>
+      <ol class="note" style="margin-left:16px">
+        <li>The truck driver must hand this document, stamped and signed, to our warehouse staff before loading.</li>
+        <li>The truck plate number must be stated on this form.</li>
+        <li>The goods are shipped from Known Consignor (KC) facilities.</li>
+      </ol>
+    </div>
+
+    <div class="kv">
+      <div class="box"><div class="lbl">Shipping No. / Date</div><b data-f="shipment.shippingNo"></b> · <span data-f="date.shipping"></span></div>
+      <div class="box"><div class="lbl">Ocean booking</div><span data-f="shipment.bookingRef"></span> (SDG Lines)</div>
+      <div class="box"><div class="lbl">Shipper — pick-up address</div><b data-f="exporter.name"></b><br><span data-f="exporter.street"></span>, <span data-f="exporter.city"></span>, <span data-f="exporter.country"></span></div>
+      <div class="box"><div class="lbl">Consignee</div><b data-f="consignee.name"></b><br><span data-f="consignee.street"></span>, <span data-f="consignee.city"></span>, <span data-f="consignee.country"></span></div>
+      <div class="box"><div class="lbl">Port of loading</div><span data-f="shipment.portsOfLoading"></span></div>
+      <div class="box"><div class="lbl">Port of discharge / final place</div><span data-f="shipment.destinationPort"></span> (UN/LOCODE <span data-f="shipment.destinationLocode"></span>) → consignee warehouse</div>
+      <div class="box"><div class="lbl">Shipment terms</div><span data-f="shipment.incoterm"></span> <span data-f="shipment.incotermPlace"></span> — <span data-f="shipment.incotermVersion"></span></div>
+      <div class="box"><div class="lbl">Documents travelling with the goods</div>Commercial invoice <span data-f="shipment.invoiceNo"></span>, packing list, EUR.1</div>
+    </div>
+
+    <table>
+      <thead><tr><th>Description of goods</th><th>HS</th><th class="r">Packages</th><th class="r">Gross weight</th><th class="r">Volume</th></tr></thead>
+      <tbody><tr><td data-f="goods.name"></td><td data-f="goods.hs"></td><td class="r">1 box</td><td class="r" data-f="calc.gross" data-fmt="kg"></td><td class="r" data-f="calc.boxVolume" data-fmt="m3"></td></tr></tbody>
+    </table>
+    <p class="note">Box outer size (L × W × H): <b data-f="calc.boxDims"></b>. Keep upright, do not stack. <span data-f="goods.dangerous"></span>.</p>
+
+    <h2 class="sub">Carrier</h2>
+    <table>
+      <tr><th style="width:30%">Driver name</th><td data-f="shipment.driver"></td></tr>
+      <tr><th>Truck plate</th><td data-f="shipment.truckPlate"></td></tr>
+      <tr><th>Loading date and time</th><td>&nbsp;</td></tr>
+    </table>
+
+    <p class="note">By signing this document the carrier acknowledges and accepts the loading and safety instructions of the shipper.</p>
+    <div class="sign"><div>Shipper — signature and stamp</div><div>Carrier (driver) — signature</div></div>
+  </div>
+  <script src="docs.js"></script>
+</body>
+</html>

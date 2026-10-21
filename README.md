@@ -10,6 +10,7 @@ a través de una Web App de Apps Script (`Code.gs`).
 | [`/`](https://portvirtuallab.github.io/flash/) | Alumnos | Bienvenida (*Welcome Participants* → *Ready to go*) |
 | [`/launch/`](https://portvirtuallab.github.io/flash/launch/) | Alumnos | Previa (*LAUNCH*) |
 | [`/mission/`](https://portvirtuallab.github.io/flash/mission/) | Alumnos | La misión (login con el código del equipo) |
+| [`/docs/`](https://portvirtuallab.github.io/flash/docs/) | Alumnos | Documentos de referencia (carta, factura y packing list, EUR.1, instrucciones de embarque, datasheet, cotización PlayForwarding, plantilla rellenable del informe) |
 | [`/demo/`](https://portvirtuallab.github.io/flash/demo/) | Demo | La misión real en modo demo: código `0000`, no corrige ni guarda nada |
 | [`/trainer/`](https://portvirtuallab.github.io/flash/trainer/) | Formador | Panel: presentación, ruleta, bienvenida, marcador, demo, Kahoot |
 | [`/trainer/roulette/`](https://portvirtuallab.github.io/flash/trainer/roulette/) | Formador | Ruleta de equipos (código TRAINER) |
@@ -35,6 +36,12 @@ tiempo. La hoja **no** tiene que ser pública: nada lee la hoja directamente.
 | `config.js` | URL de la Web App de Apps Script (`apiUrl`) |
 | `Code.gs` | API en Apps Script. **No** contiene respuestas |
 | `mission-key.json` | Respuestas, puntos y pistas. **Privado: no está en el repo** (`.gitignore`) |
+
+## Documentos de referencia (`/docs/`)
+- Todos leen sus datos de **`docs/case.js`**: cambia un valor ahí (valor, medidas, pesos, empresas, puertos) y cambia en todos los documentos.
+- Las fechas son **desplazamientos en días** respecto al día en que se abre la página (`dates` en `case.js`).
+- Cada documento se imprime o guarda en PDF en A4 con el botón *Print / Save as PDF*.
+- La cotización de PlayForwarding contiene a propósito incoherencias para la tarea 2. La lista está en las notas privadas del formador, fuera del repositorio.
 
 ## Puesta en marcha
 1. **Apps Script:** pega `Code.gs` en el proyecto.

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>001 · Commercial Invoice &amp; Packing List</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="docs.css">
+  <script src="case.js"></script>
+</head>
+<body>
+  <!-- Page 1: Commercial invoice -->
+  <div class="sheet tecnomaq">
+    <div class="lh">
+      <div class="brand">TECNOMAQ<small><span data-f="exporter.name"></span> · <span data-f="exporter.unit"></span></small></div>
+      <div class="addr">
+        <span data-f="exporter.street"></span><br><span data-f="exporter.city"></span>, <span data-f="exporter.country"></span><br>
+        Tax Registration No.: <span data-f="exporter.taxId"></span><br>
+        <span data-f="exporter.phone"></span> · <span data-f="exporter.email"></span>
+      </div>
+    </div>
+
+    <h1 class="title">Commercial Invoice</h1>
+
+    <div class="kv">
+      <div class="box"><div class="lbl">Invoice No. / Date</div><b data-f="shipment.invoiceNo"></b> · <span data-f="date.invoice"></span></div>
+      <div class="box"><div class="lbl">Terms of delivery</div><b><span data-f="shipment.incoterm"></span> <span data-f="shipment.incotermPlace"></span></b> — <span data-f="shipment.incotermVersion"></span></div>
+      <div class="box"><div class="lbl">Customer / Consignee</div>
+        <b data-f="consignee.name"></b><br><span data-f="consignee.street"></span><br><span data-f="consignee.city"></span>, <span data-f="consignee.country"></span><br>
+        VAT: <span data-f="consignee.vat"></span> · EORI: <span data-f="consignee.eori"></span></div>
+      <div class="box"><div class="lbl">Shipment</div>
+        From: Cairo, <span data-f="exporter.country"></span><br>
+        To: <span data-f="shipment.destinationPort"></span> (UN/LOCODE <span data-f="shipment.destinationLocode"></span>)<br>
+        Country of origin: <b data-f="goods.origin"></b><br>
+        Preferential origin proof: EUR.1 <span data-f="shipment.euro1No"></span></div>
+    </div>
+
+    <table>
+      <thead><tr><th>Ref.</th><th>Description</th><th>HS code</th><th>Origin</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Amount</th></tr></thead>
+      <tbody>
+        <tr>
+          <td data-f="goods.ref"></td>
+          <td><b data-f="goods.name"></b><br><span style="font-size:8.5pt;color:#4a5361" data-f="goods.description"></span></td>
+          <td data-f="goods.hs"></td>
+          <td data-f="goods.origin"></td>
+          <td class="r" data-f="goods.qty"></td>
+          <td class="r" data-f="goods.unitPrice" data-fmt="eur"></td>
+          <td class="r" data-f="calc.total" data-fmt="eur"></td>
+        </tr>
+        <tr class="total"><td colspan="6" class="r">TOTAL INVOICE (<span data-f="goods.currency"></span>)</td><td class="r" data-f="calc.total" data-fmt="eur"></td></tr>
+      </tbody>
+    </table>
+
+    <p class="note">The invoice amount covers the goods only. Transport, insurance and destination costs up to the named place are borne by the seller under the agreed Incoterm and are not included in this amount. Import duties and taxes in Italy are for the consignee's account.</p>
+    <p class="note">Export supply from Egypt — VAT zero-rated. Packages: <span data-f="goods.packages"></span>, gross weight <span data-f="calc.gross" data-fmt="kg"></span>, volume <span data-f="calc.boxVolume" data-fmt="m3"></span>. <span data-f="goods.dangerous"></span>.</p>
+
+    <h2 class="sub">Origin declaration</h2>
+    <p class="note">The exporter declares that the goods described in this invoice are of <b>Egyptian preferential origin</b> under the Euro-Mediterranean Association Agreement between the European Union and Egypt. Movement certificate EUR.1 <span data-f="shipment.euro1No"></span> is issued for this shipment.</p>
+
+    <h2 class="sub">Payment</h2>
+    <table>
+      <tr><th style="width:22%">Terms</th><td data-f="shipment.payment"></td></tr>
+      <tr><th>Bank</th><td><span data-f="exporter.bank"></span> · SWIFT <span data-f="exporter.swift"></span></td></tr>
+      <tr><th>IBAN</th><td data-f="exporter.iban"></td></tr>
+    </table>
+
+    <div class="sign"><div>Place and date: Cairo, <span data-f="date.invoice"></span></div><div>Signature and stamp — <span data-f="exporter.name"></span></div></div>
+  </div>
+
+  <!-- Page 2: Packing list -->
+  <div class="sheet tecnomaq">
+    <div class="lh">
+      <div class="brand">TECNOMAQ<small><span data-f="exporter.name"></span> · <span data-f="exporter.unit"></span></small></div>
+      <div class="addr">Invoice <span data-f="shipment.invoiceNo"></span> · <span data-f="date.invoice"></span></div>
+    </div>
+
+    <h1 class="title">Packing List</h1>
+    <table>
+      <thead><tr><th>Package</th><th>Marks &amp; numbers</th><th>Contents</th><th class="r">Units</th></tr></thead>
+      <tbody><tr><td>1 / 1 — wooden box</td><td data-f="goods.marks"></td><td data-f="goods.name"></td><td class="r" data-f="goods.qty"></td></tr></tbody>
+    </table>
+
+    <h2 class="sub">Dimensions and weights (length × width × height)</h2>
+    <table>
+      <thead><tr><th></th><th>Dimensions L × W × H</th><th class="r">Weight</th><th class="r">Volume</th></tr></thead>
+      <tbody>
+        <tr><td>Machine (unpacked)</td><td data-f="calc.machineDims"></td><td class="r"><span data-f="goods.machine.kg" data-fmt="kg"></span> (net)</td><td class="r">—</td></tr>
+        <tr><td>Wooden box (outer size)</td><td data-f="calc.boxDims"></td><td class="r"><span data-f="goods.box.kg" data-fmt="kg"></span> (tare)</td><td class="r" data-f="calc.boxVolume" data-fmt="m3"></td></tr>
+        <tr class="total"><td>Total shipment</td><td>1 box</td><td class="r"><span data-f="calc.gross" data-fmt="kg"></span> (gross)</td><td class="r" data-f="calc.boxVolume" data-fmt="m3"></td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">Handling instructions</h2>
+    <ul class="list note">
+      <li>Keep upright — do not tilt. Do not stack. Handle with forklift from the long side only.</li>
+      <li>Box with skids: lift points marked on the box. Centre of gravity marked.</li>
+      <li><span data-f="goods.dangerous"></span>.</li>
+    </ul>
+
+    <div class="sign"><div>Packed by: Tecnomaq S.A. — Cairo plant</div><div>Checked by (signature)</div></div>
+  </div>
+  <script src="docs.js"></script>
+</body>
+</html>

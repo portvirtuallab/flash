@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>005 · PlayForwarding Quotation</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="docs.css">
+  <script src="case.js"></script>
+</head>
+<body>
+  <div class="sheet playfwd">
+    <div class="lh">
+      <div class="brand">PLAYFORWARDING<small>Barcelona · Freight forwarding</small></div>
+      <div class="addr"><span data-f="forwarder.street"></span><br><span data-f="forwarder.city"></span>, <span data-f="forwarder.country"></span><br><span data-f="forwarder.email"></span></div>
+    </div>
+
+    <h1 class="title">Quotation · Sea freight export FCL · No. <span data-f="quote.number"></span></h1>
+
+    <div class="kv">
+      <div class="box"><div class="lbl">Customer</div><b data-f="exporter.name"></b><br><span data-f="exporter.unit"></span></div>
+      <div class="box"><div class="lbl">Customer reference</div><span data-f="quote.customerRef"></span></div>
+      <div class="box"><div class="lbl">Offer date</div><span data-f="date.quoteOffer"></span></div>
+      <div class="box"><div class="lbl">Valid until</div><span data-f="date.quoteValidUntil"></span></div>
+      <div class="box"><div class="lbl">Goods</div><span data-f="goods.name"></span> · 1 package · <span data-f="calc.gross" data-fmt="kg"></span> · <span data-f="quote.cbm" data-fmt="m3"></span></div>
+      <div class="box"><div class="lbl">Terms</div><b data-f="quote.term"></b> · <span data-f="shipment.incotermVersion"></span></div>
+    </div>
+
+    <h2 class="sub">Full container sea freight — <span data-f="quote.equipment"></span></h2>
+    <table>
+      <thead><tr><th>Port of origin</th><th>Port of destination</th><th>Service</th><th class="r">Qty</th><th class="r">Price</th><th class="r">Amount</th></tr></thead>
+      <tbody>
+        <tr><td data-f="quote.pol"></td><td data-f="quote.pod"></td><td>Maritime service incl. inland truck Cairo → Damietta port, express route (pre-alert)</td><td class="r">1</td><td class="r" data-f="quote.amount" data-fmt="eures"></td><td class="r" data-f="quote.amount" data-fmt="eures"></td></tr>
+        <tr class="total"><td colspan="5" class="r">Freight subtotal</td><td class="r" data-f="quote.amount" data-fmt="eures"></td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">Arrival charges</h2>
+    <table><tr><td>NOT INCLUDED IN THE TOTAL AMOUNT — please request them from our Operations Department.</td></tr></table>
+
+    <table style="margin-top:12px">
+      <tr class="total"><td class="r" style="width:75%">TOTAL AMOUNT (EUR)</td><td class="r" data-f="quote.amount" data-fmt="eures"></td></tr>
+    </table>
+
+    <h2 class="sub">Conditions</h2>
+    <ul class="list note">
+      <li>Totals in euros use the exchange rate of the day the quote was created; the final invoice depends on the exchange rate at invoicing date. NET/NET costs.</li>
+      <li>Chargeable weight basis ratio 1 ton : 6 m³. Valid for appropriately packed / palletised cargo.</li>
+      <li>Based on standard free time at POL and POD. Subject to unforeseen costs: storage, demurrage, detention, waiting time, multi-stop or customs inspection fees, if any.</li>
+      <li>Excludes taxes and duties at both ends. Payment: bank transfer.</li>
+      <li>Late cancellation will be subject to charges as per airline.</li>
+      <li>All documents must be delivered by the shipper with the cargo prior to flight departure for pouch delivery; PLAYFORWARDING BARCELONA cannot be held responsible for delays in the release of the cargo caused by missing documents.</li>
+    </ul>
+
+    <div class="sign"><div>Created by: <span data-f="forwarder.contact"></span></div><div>Accepted by the customer (signature and date)</div></div>
+  </div>
+  <script src="docs.js"></script>
+</body>
+</html>

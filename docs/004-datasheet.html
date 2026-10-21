@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>004 · Data Sheet — Tecnomaq LT-2000</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="docs.css">
+  <script src="case.js"></script>
+  <style>
+    .hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; align-items: center; margin-bottom: 10px; }
+    .hero h2 { font-size: 22pt; color: #8a1c1c; line-height: 1.1; }
+    .hero p { color: #4a5361; margin-top: 6px; }
+    .features { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+    .features div { background: #f8f1f1; border-left: 3px solid #8a1c1c; padding: 6px 8px; font-size: 9pt; }
+    .features b { display: block; color: #8a1c1c; }
+    svg text { font-family: Inter, Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <div class="sheet tecnomaq">
+    <div class="lh">
+      <div class="brand">TECNOMAQ<small>Technical data sheet</small></div>
+      <div class="addr">Manufactured by <span data-f="exporter.name"></span> — Cairo plant, Egypt<br><span data-f="exporter.web"></span></div>
+    </div>
+
+    <div class="hero">
+      <div>
+        <h2>LT-2000<br>CNC Milling Machine</h2>
+        <p>Compact, high-precision CNC milling machine for automotive, aerospace and precision-engineering workshops.</p>
+      </div>
+      <!-- Wooden box drawing with outer dimensions -->
+      <svg viewBox="0 0 320 220" role="img" aria-label="Wooden box drawing with its outer dimensions">
+        <polygon points="60,70 200,70 250,40 110,40" fill="#e9d3b0" stroke="#8a5a2b" stroke-width="2"/>
+        <polygon points="200,70 250,40 250,160 200,190" fill="#d8b98a" stroke="#8a5a2b" stroke-width="2"/>
+        <rect x="60" y="70" width="140" height="120" fill="#f1dfc2" stroke="#8a5a2b" stroke-width="2"/>
+        <line x1="60" y1="100" x2="200" y2="100" stroke="#c79d62"/><line x1="60" y1="130" x2="200" y2="130" stroke="#c79d62"/><line x1="60" y1="160" x2="200" y2="160" stroke="#c79d62"/>
+        <text x="130" y="150" text-anchor="middle" font-size="11" font-weight="700" fill="#8a5a2b">TECNOMAQ</text>
+        <text x="130" y="165" text-anchor="middle" font-size="9" fill="#8a5a2b">↑ THIS WAY UP ↑</text>
+        <line x1="60" y1="205" x2="200" y2="205" stroke="#1c2430"/><text x="130" y="217" text-anchor="middle" font-size="11" font-weight="700">L <tspan data-f="goods.box.l"></tspan> m</text>
+        <line x1="210" y1="198" x2="258" y2="168" stroke="#1c2430"/><text x="268" y="196" font-size="11" font-weight="700">W <tspan data-f="goods.box.w"></tspan> m</text>
+        <line x1="45" y1="70" x2="45" y2="190" stroke="#1c2430"/><text x="38" y="135" text-anchor="end" font-size="11" font-weight="700">H <tspan data-f="goods.box.h"></tspan> m</text>
+      </svg>
+    </div>
+
+    <div class="features">
+      <div><b>Compact design</b>Fits small industrial spaces; easy to transport.</div>
+      <div><b>High precision</b>±0.01 mm accuracy for complex metal parts.</div>
+      <div><b>User-friendly</b>Integrated CNC control with touch-screen interface.</div>
+      <div><b>Energy-efficient</b>Lower energy consumption; high-strength steel frame.</div>
+    </div>
+
+    <h2 class="sub">Technical specifications</h2>
+    <table>
+      <tr><th style="width:42%">Model</th><td>Tecnomaq LT-2000</td></tr>
+      <tr><th>Type</th><td>CNC milling machine (computer numerical control)</td></tr>
+      <tr><th>HS code</th><td><span data-f="goods.hs"></span> — <span data-f="goods.hsText"></span></td></tr>
+      <tr><th>Power supply</th><td>400 V / 50 Hz / 3-phase</td></tr>
+      <tr><th>Max. spindle speed</th><td>12,000 rpm</td></tr>
+      <tr><th>Max. cutting speed</th><td>400 mm/s</td></tr>
+      <tr><th>Precision</th><td>±0.01 mm</td></tr>
+    </table>
+
+    <h2 class="sub">Shipping data (length × width × height)</h2>
+    <table>
+      <tr><th style="width:42%">Machine dimensions</th><td data-f="calc.machineDims"></td></tr>
+      <tr><th>Machine net weight</th><td data-f="goods.machine.kg" data-fmt="kg"></td></tr>
+      <tr><th>Packed in wooden box — outer dimensions</th><td><b data-f="calc.boxDims"></b></td></tr>
+      <tr><th>Wooden box weight (tare)</th><td data-f="goods.box.kg" data-fmt="kg"></td></tr>
+      <tr><th>Gross weight (machine + box)</th><td><b data-f="calc.gross" data-fmt="kg"></b></td></tr>
+      <tr><th>Volume of the box</th><td data-f="calc.boxVolume" data-fmt="m3"></td></tr>
+      <tr><th>Handling</th><td>Keep upright · do not stack · forklift from the long side</td></tr>
+      <tr><th>Dangerous goods</th><td data-f="goods.dangerous"></td></tr>
+    </table>
+
+    <p class="note">Customer support: <span data-f="exporter.email"></span> · <span data-f="exporter.phone"></span></p>
+  </div>
+  <script src="docs.js"></script>
+</body>
+</html>
