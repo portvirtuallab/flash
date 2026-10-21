@@ -41,7 +41,6 @@ tiempo. La hoja **no** tiene que ser pública: nada lee la hoja directamente.
 - Todos leen sus datos de **`docs/case.js`**: cambia un valor ahí (valor, medidas, pesos, empresas, puertos) y cambia en todos los documentos.
 - Las fechas son **desplazamientos en días** respecto al día en que se abre la página (`dates` en `case.js`).
 - Cada documento se imprime o guarda en PDF en A4 con el botón *Print / Save as PDF*.
-- La cotización de PlayForwarding contiene a propósito incoherencias para la tarea 2. La lista está en las notas privadas del formador, fuera del repositorio.
 
 ## Puesta en marcha
 1. **Apps Script:** pega `Code.gs` en el proyecto.
