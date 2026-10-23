@@ -278,7 +278,7 @@
                 <label><input type="radio" name="t1_q3" value="no"> ❌ No</label>
               </div>
 
-              <label>1.4 — Estimated inland distance from the <strong>warehouse in the country of origin to the warehouse in the destination country</strong>, in km (numbers only; decimal comma accepted):</label>
+              <label>1.4 — Estimated <strong>total distance</strong> of your route from the <strong>warehouse in the country of origin to the warehouse in the destination country</strong>, adding all legs (road + sea or rail), in km (numbers only; decimal comma accepted):</label>
               <input type="text" class="task-answer" data-task="task1" data-index="0" inputmode="decimal" placeholder="Example: 1320" />
               <div class="error-text" data-error-for="task1-0">Enter a valid number (no units or symbols).</div>
 
@@ -318,16 +318,16 @@
             <div class="card task-card" id="task3" data-submitted="false">
               <p><strong>Instructions:</strong> request quotations from the maritime companies in the PVL.ONE environment using your <strong>team PIN</strong> and complete the maritime route cost breakdown. Numbers only. Decimal commas are accepted. The example values are only format examples and are not valid answers. <span class="points-tag">18 pts</span></p>
 
-              <label>3.1 — <strong>Ocean freight</strong> port-to-port, including all surcharges (€):</label>
-              <input type="text" class="task-answer" data-task="task3" data-index="0" inputmode="decimal" placeholder="Example: 1680" />
+              <label>3.1 — <strong>Ocean freight</strong> port-to-port: <strong>total of the SDG Lines quotation</strong> (freight + BAF + all surcharges) (€):</label>
+              <input type="text" class="task-answer" data-task="task3" data-index="0" inputmode="decimal" placeholder="Example: 1720" />
               <div class="error-text" data-error-for="task3-0">Enter a valid number.</div>
 
               <label>3.2 — Combined <strong>inland transport</strong> (pre-carriage at origin + final delivery at destination) (€):</label>
-              <input type="text" class="task-answer" data-task="task3" data-index="1" inputmode="decimal" placeholder="Example: 1280" />
+              <input type="text" class="task-answer" data-task="task3" data-index="1" inputmode="decimal" placeholder="Example: 1580" />
               <div class="error-text" data-error-for="task3-1">Enter a valid number.</div>
 
               <label>3.3 — Port-to-port <strong>transit time</strong>, in days (integer):</label>
-              <input type="text" class="task-answer" data-task="task3" data-index="2" inputmode="numeric" placeholder="Example: 22" />
+              <input type="text" class="task-answer" data-task="task3" data-index="2" inputmode="numeric" placeholder="Example: 40" />
               <div class="error-text" data-error-for="task3-2">Enter a valid integer.</div>
 
               <label>3.4 — <strong>Destination handling charges</strong> (THC + destination customs clearance) (€):</label>
@@ -353,11 +353,11 @@
               <input type="text" class="task-answer" data-task="task4" data-index="0" inputmode="decimal" placeholder="Example: 1150" />
               <div class="error-text" data-error-for="task4-0">Enter a valid number.</div>
 
-              <label>4.2 — <strong>Airport charges</strong> (origin + destination, surcharges included) (€):</label>
+              <label>4.2 — <strong>Total air freight quotation</strong> from SDG Airlines (air freight + origin and destination charges, surcharges included) (€):</label>
               <input type="text" class="task-answer" data-task="task4" data-index="1" inputmode="decimal" placeholder="Example: 8750" />
               <div class="error-text" data-error-for="task4-1">Enter a valid number.</div>
 
-              <label>4.3 — <strong>Air transit time</strong>, in days (integer):</label>
+              <label>4.3 — <strong>Air transit time</strong>, in days (integer; same-day or next-day arrival = 1):</label>
               <input type="text" class="task-answer" data-task="task4" data-index="2" inputmode="numeric" placeholder="Example: 6" />
               <div class="error-text" data-error-for="task4-2">Enter a valid integer.</div>
 
